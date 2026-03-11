@@ -1,10 +1,20 @@
 import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+const formatIDR = (amount) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+
+const PAYMENT_METHOD_LABEL = {
+    cash: 'Cash / Tunai',
+    transfer: 'Bank Transfer (Mandiri)',
+    credit_card: 'Kartu Kredit',
+};
+
 export default function ReservationConfirmation() {
     const location = useLocation();
     const navigate = useNavigate();
     const reservationData = location.state?.reservationData || {};
+    const paymentData = location.state?.paymentData || null;
 
     // Stabilize booking number - generated once per page visit
     const bookingNo = useMemo(() => {
@@ -152,10 +162,53 @@ export default function ReservationConfirmation() {
                         <span className="font-medium">: {reservationData.nationality || '-'}</span>
                     </div>
                     <div className="flex">
-                        <span className="w-40 text-gray-600">Room Rate Net</span>
-                        <span className="font-medium">: IDR -</span>
+                        <span className="w-40 text-gray-600">Room Rate / Night</span>
+                        <span className="font-medium">: {paymentData ? formatIDR(paymentData.roomRate) : 'IDR -'}</span>
                     </div>
                 </div>
+
+                {/* ── Pricing Table ── */}
+                {paymentData && (
+                    <div className="mb-8">
+                        <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+                            <thead className="bg-gray-100">
+                                <tr>
+                                    <th className="text-left px-4 py-2 font-semibold text-gray-700" colSpan={2}>Rincian Biaya / Charge Details</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-600">
+                                        {reservationData.roomType} × {paymentData.numRooms} kamar × {paymentData.totalNights} malam
+                                    </td>
+                                    <td className="px-4 py-2 text-right font-medium">{formatIDR(paymentData.subtotal)}</td>
+                                </tr>
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-600">PPN 11%</td>
+                                    <td className="px-4 py-2 text-right">{formatIDR(paymentData.tax)}</td>
+                                </tr>
+                                <tr>
+                                    <td className="px-4 py-2 text-gray-600">Service Charge 5%</td>
+                                    <td className="px-4 py-2 text-right">{formatIDR(paymentData.serviceCharge)}</td>
+                                </tr>
+                                <tr className="bg-gray-800 text-white">
+                                    <td className="px-4 py-2 font-bold">TOTAL</td>
+                                    <td className="px-4 py-2 text-right font-bold text-base">{formatIDR(paymentData.grandTotal)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div className="mt-2 text-sm text-gray-600 flex items-center gap-2">
+                            <span className="font-medium">Metode Pembayaran:</span>
+                            <span>{PAYMENT_METHOD_LABEL[paymentData.method] || paymentData.method}</span>
+                            {paymentData.method === 'transfer' && paymentData.bankRef && (
+                                <span className="text-gray-400">· Ref: {paymentData.bankRef}</span>
+                            )}
+                            {paymentData.method === 'credit_card' && paymentData.cardHolder && (
+                                <span className="text-gray-400">· {paymentData.cardHolder}</span>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Guarantee Info */}
                 <div className="text-sm text-gray-700 leading-relaxed mb-8">

@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import RegistrationForm from './pages/RegistrationForm'
+import PaymentPage from './pages/PaymentPage'
 import ReservationConfirmation from './pages/ReservationConfirmation'
 
 function App() {
@@ -8,6 +8,7 @@ function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<RegistrationForm />} />
+                <Route path="/payment" element={<PaymentPage />} />
                 <Route path="/confirmation" element={<ReservationConfirmation />} />
             </Routes>
         </BrowserRouter>
