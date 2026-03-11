@@ -1,9 +1,27 @@
+import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function ReservationConfirmation() {
     const location = useLocation();
     const navigate = useNavigate();
     const reservationData = location.state?.reservationData || {};
+
+    // Stabilize booking number - generated once per page visit
+    const bookingNo = useMemo(() => {
+        return Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    }, []);
+
+    // Calculate total nights automatically
+    const totalNights = useMemo(() => {
+        if (reservationData.arrivalDate && reservationData.departureDate) {
+            const arrival = new Date(reservationData.arrivalDate);
+            const departure = new Date(reservationData.departureDate);
+            const diffTime = departure - arrival;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays > 0 ? diffDays : '-';
+        }
+        return '-';
+    }, [reservationData.arrivalDate, reservationData.departureDate]);
 
     const handlePrint = () => {
         window.print();
@@ -33,7 +51,6 @@ export default function ReservationConfirmation() {
                 {/* Header */}
                 <div className="text-center mb-10 border-b-2 border-gray-800 pb-6">
                     <div className="flex justify-center mb-4">
-                        {/* Placeholder for Logo matching image */}
                         <div className="w-24 h-24 border-2 border-gray-800 rounded-full flex items-center justify-center">
                             <span className="text-sm font-bold text-gray-800 text-center uppercase">DKI Jakarta<br />Pusat</span>
                         </div>
@@ -57,7 +74,7 @@ export default function ReservationConfirmation() {
                             </div>
                             <div className="flex">
                                 <span className="w-36 text-gray-600">Booking No.</span>
-                                <span className="font-medium">: {Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}</span> {/* Auto generated for demo */}
+                                <span className="font-medium">: {bookingNo}</span>
                             </div>
                             <div className="flex">
                                 <span className="w-36 text-gray-600">Book By</span>
@@ -99,7 +116,7 @@ export default function ReservationConfirmation() {
                 {/* Guest Info */}
                 <div className="space-y-3 mb-10 text-sm">
                     <div className="flex">
-                        <span className="w-40 text-gray-600">First Name</span>
+                        <span className="w-40 text-gray-600">Guest Name</span>
                         <span className="font-medium">: {reservationData.name || '-'}</span>
                     </div>
                     <div className="flex">
@@ -112,19 +129,31 @@ export default function ReservationConfirmation() {
                     </div>
                     <div className="flex">
                         <span className="w-40 text-gray-600">Total Night</span>
-                        <span className="font-medium">: {/* Calculate diff if possible, else placeholder */ '1'}</span>
+                        <span className="font-medium">: {totalNights}</span>
+                    </div>
+                    <div className="flex">
+                        <span className="w-40 text-gray-600">Room No.</span>
+                        <span className="font-medium">: {reservationData.roomNo || '-'}</span>
                     </div>
                     <div className="flex">
                         <span className="w-40 text-gray-600">Room/Unit Type</span>
                         <span className="font-medium">: {reservationData.roomType || '-'}</span>
                     </div>
                     <div className="flex">
+                        <span className="w-40 text-gray-600">No. of Rooms</span>
+                        <span className="font-medium">: {reservationData.numberOfRoom || '-'}</span>
+                    </div>
+                    <div className="flex">
                         <span className="w-40 text-gray-600">Person Pax</span>
                         <span className="font-medium">: {reservationData.numberOfPerson || '-'}</span>
                     </div>
                     <div className="flex">
+                        <span className="w-40 text-gray-600">Nationality</span>
+                        <span className="font-medium">: {reservationData.nationality || '-'}</span>
+                    </div>
+                    <div className="flex">
                         <span className="w-40 text-gray-600">Room Rate Net</span>
-                        <span className="font-medium">: IDR </span>
+                        <span className="font-medium">: IDR -</span>
                     </div>
                 </div>
 
