@@ -27,9 +27,11 @@ const UserManagement = () => {
         try {
             const { data, error } = await supabase
                 .from('user_roles')
-                .select('*');
+                .select('*')
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
+            console.log("Fetched users:", data);
             setUsers(data);
         } catch (err) {
             setError(err.message);
@@ -44,19 +46,28 @@ const UserManagement = () => {
         setError(null);
 
         try {
-            // Registering user via auth.admin is not available on client without service key.
-            // But we can use standard signUp if we manage sessions properly, 
-            // OR ideally, use a secure Supabase Edge Function.
-            // For this app prototype, signUp might automatically log out the current sender, which is bad for admin flow.
-            // Using a specialized server route is highly recommended.
+            // Call the PostgreSQL function we created to securely create user
+            const { data, error: rpcError } = await supabase.rpc('create_user_by_admin', {
+                email: email,
+                password: password,
+                assign_role: role
+            });
+
+            if (rpcError) {
+                throw rpcError;
+            }
+
+            // Success, clear form and refresh list
+            setEmail('');
+            setPassword('');
+            setRole('Resepsionis');
+            fetchUsers();
             
-            // Note for implementation context: 
-            // supabase.auth.signUp WILL create a session for the new user, potentially overwriting current.
-            // To prevent this securely, you must use Supabase Admin API on a backend.
-            alert("Creating users securely requires a backend (e.g. Supabase Edge Functions) so the Superadmin doesn't get logged out automatically. This UI demonstrates the RBAC protection.");
-            
+            alert('Pengguna baru berhasil ditambahkan!');
+
         } catch (err) {
-            setError(err.message);
+            console.error("User creation error:", err);
+            setError(err.message || 'Terjadi kesalahan saat membuat pengguna.');
         } finally {
             setIsCreating(false);
         }
