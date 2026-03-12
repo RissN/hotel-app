@@ -57,14 +57,14 @@ export default function RegistrationForm() {
     const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1";
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-100 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 animate-gradient py-10 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto rounded-2xl shadow-2xl overflow-hidden border border-gray-200 bg-white">
 
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-8 py-8 text-center text-white">
                     <div className="flex justify-center mb-4">
-                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white/40">
-                            <span className="text-lg font-bold tracking-tight">LOGO</span>
+                        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-4 border-white overflow-hidden shadow-lg">
+                            <img src="/logo.jpg" alt="PPKD Jakarta Pusat Logo" className="w-full h-full object-cover" />
                         </div>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">PPKD HOTEL</h1>

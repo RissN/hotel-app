@@ -114,7 +114,7 @@ export default function PaymentPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-100 py-10 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 animate-gradient py-10 px-4">
 
             {/* Step Indicator */}
             <div className="max-w-3xl mx-auto mb-8">

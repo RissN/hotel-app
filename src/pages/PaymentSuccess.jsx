@@ -37,7 +37,7 @@ export default function PaymentSuccess() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-100 print:bg-white print:min-h-0">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 animate-gradient print:bg-white print:min-h-0">
 
             {/* ── Success Banner (hidden on print) ── */}
             <div className="print:hidden py-10 px-4">
