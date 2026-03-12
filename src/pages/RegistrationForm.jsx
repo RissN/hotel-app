@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function RegistrationForm() {
     const navigate = useNavigate();
+    const [showConfirm, setShowConfirm] = useState(false);
     const [formData, setFormData] = useState({
         roomNo: '',
         numberOfPerson: '',
@@ -35,7 +36,21 @@ export default function RegistrationForm() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        setShowConfirm(true);
+    };
+
+    const handleConfirm = () => {
+        setShowConfirm(false);
         navigate('/payment', { state: { reservationData: formData } });
+    };
+
+    const handleCancel = () => {
+        setShowConfirm(false);
+    };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     };
 
     const inputClass = "w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-3 py-2 bg-white text-sm transition";
@@ -233,6 +248,78 @@ export default function RegistrationForm() {
                     </div>
                 </form>
             </div>
+
+            {/* ── Confirmation Modal ── */}
+            {showConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+                        {/* Modal Header */}
+                        <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-5 text-white">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold">Konfirmasi Data</h3>
+                                    <p className="text-blue-100 text-sm">Pastikan data sudah benar sebelum melanjutkan</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                            {/* Guest */}
+                            <div className="bg-blue-50 rounded-lg p-4">
+                                <h4 className="text-xs font-bold uppercase tracking-wide text-blue-600 mb-2">Data Tamu</h4>
+                                <div className="space-y-1 text-sm">
+                                    <div className="flex justify-between"><span className="text-gray-500">Nama</span><span className="font-medium text-gray-800">{formData.name || '-'}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">Email</span><span className="font-medium text-gray-800">{formData.email || '-'}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">Telepon</span><span className="font-medium text-gray-800">{formData.phone || '-'}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">Kebangsaan</span><span className="font-medium text-gray-800">{formData.nationality || '-'}</span></div>
+                                </div>
+                            </div>
+
+                            {/* Room */}
+                            <div className="bg-slate-50 rounded-lg p-4">
+                                <h4 className="text-xs font-bold uppercase tracking-wide text-blue-600 mb-2">Informasi Kamar</h4>
+                                <div className="space-y-1 text-sm">
+                                    <div className="flex justify-between"><span className="text-gray-500">No. Kamar</span><span className="font-medium text-gray-800">{formData.roomNo || '-'}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">Tipe Kamar</span><span className="font-medium text-gray-800">{formData.roomType || '-'}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">Jumlah Kamar</span><span className="font-medium text-gray-800">{formData.numberOfRoom || '-'}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">Jumlah Tamu</span><span className="font-medium text-gray-800">{formData.numberOfPerson || '-'}</span></div>
+                                </div>
+                            </div>
+
+                            {/* Dates */}
+                            <div className="bg-green-50 rounded-lg p-4">
+                                <h4 className="text-xs font-bold uppercase tracking-wide text-green-600 mb-2">Tanggal Menginap</h4>
+                                <div className="space-y-1 text-sm">
+                                    <div className="flex justify-between"><span className="text-gray-500">Check-in</span><span className="font-medium text-gray-800">{formatDate(formData.arrivalDate)}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">Check-out</span><span className="font-medium text-gray-800">{formatDate(formData.departureDate)}</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+                            <button
+                                onClick={handleCancel}
+                                className="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200 text-sm"
+                            >
+                                ← Kembali
+                            </button>
+                            <button
+                                onClick={handleConfirm}
+                                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold shadow-md hover:shadow-lg transition-all duration-200 text-sm"
+                            >
+                                Konfirmasi & Lanjutkan →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
