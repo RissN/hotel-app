@@ -245,7 +245,7 @@ export default function PaymentPage() {
                     <div className="flex justify-between items-center">
                         <button
                             type="button"
-                            onClick={() => navigate('/', { state: { reservationData } })}
+                            onClick={() => navigate('/registration', { state: { reservationData } })}
                             disabled={isProcessing}
                             className={`text-sm font-medium flex items-center gap-1 transition ${isProcessing ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}
                         >

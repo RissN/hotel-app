@@ -92,7 +92,7 @@ export default function PaymentSuccess() {
                 {/* Action Buttons */}
                 <div className="max-w-3xl mx-auto flex justify-center gap-4 mb-8">
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate('/registration')}
                         className="px-6 py-3 rounded-xl border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200 text-sm"
                     >
                         ← Kembali ke Beranda

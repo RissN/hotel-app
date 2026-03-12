@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const formatIDR = (amount) =>
@@ -16,10 +16,9 @@ export default function ReservationConfirmation() {
     const reservationData = location.state?.reservationData || {};
     const paymentData = location.state?.paymentData || null;
 
-    // Stabilize booking number - generated once per page visit
-    const bookingNo = useMemo(() => {
-        return Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-    }, []);
+    const [bookingNo] = useState(() => 
+        Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
+    );
 
     // Calculate total nights automatically
     const totalNights = useMemo(() => {
@@ -43,7 +42,7 @@ export default function ReservationConfirmation() {
             {/* Top action bar - Hidden on print */}
             <div className="max-w-4xl mx-auto mb-4 flex justify-between items-center px-4 print:hidden">
                 <button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/registration')}
                     className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
                 >
                     ← Back to Registration
