@@ -2,6 +2,11 @@
 
 To make the 'Add User' functionality work without logging out the Superadmin, you must run the following SQL command in your Supabase SQL Editor. This sets up a secure remote procedure call (RPC).
 
+> **⚠️ Jika Anda sudah pernah membuat fungsi ini sebelumnya, jalankan perintah DROP dulu:**
+> ```sql
+> DROP FUNCTION IF EXISTS create_user_by_admin(TEXT, TEXT, user_role);
+> ```
+
 ```sql
 -- Create a secure PostgreSQL function to register non-logged-in users
 CREATE OR REPLACE FUNCTION create_user_by_admin(
@@ -21,7 +26,10 @@ BEGIN
     RAISE EXCEPTION 'Akses Ditolak: Hanya Superadmin yang dapat membuat pengguna baru.';
   END IF;
 
-  -- Create user securely using the crypt extension
+  -- Generate the new user ID
+  new_user_id := gen_random_uuid();
+
+  -- Create user in auth.users
   INSERT INTO auth.users (
     instance_id,
     id,
@@ -33,11 +41,15 @@ BEGIN
     raw_app_meta_data,
     raw_user_meta_data,
     created_at,
-    updated_at
+    updated_at,
+    confirmation_token,
+    recovery_token,
+    email_change_token_new,
+    email_change
   )
   VALUES (
     '00000000-0000-0000-0000-000000000000',
-    gen_random_uuid(),
+    new_user_id,
     'authenticated',
     'authenticated',
     email,
@@ -46,9 +58,39 @@ BEGIN
     '{"provider":"email","providers":["email"]}',
     '{}',
     now(),
-    now()
+    now(),
+    '',
+    '',
+    '',
+    ''
+  );
+
+  -- Create identity record in auth.identities (required by Supabase for login)
+  INSERT INTO auth.identities (
+    id,
+    user_id,
+    provider_id,
+    provider,
+    identity_data,
+    last_sign_in_at,
+    created_at,
+    updated_at
   )
-  RETURNING id INTO new_user_id;
+  VALUES (
+    gen_random_uuid(),
+    new_user_id,
+    new_user_id::text,
+    'email',
+    jsonb_build_object(
+      'sub', new_user_id::text,
+      'email', email,
+      'email_verified', true,
+      'phone_verified', false
+    ),
+    now(),
+    now(),
+    now()
+  );
 
   -- Tie the new user id to the desired hotel role
   INSERT INTO public.user_roles (user_id, role)

@@ -4,7 +4,9 @@ import { useAuth } from '../context/AuthContext';
 const RoleBasedHome = () => {
     const { role, loading } = useAuth();
     
-    if (loading) return null; // Let ProtectedRoute handle the loading spinner usually, or show brief skeleton here
+    if (loading) return null; 
+
+    console.log("RoleBasedHome routing decision for role:", role);
 
     if (role === 'Superadmin' || role === 'Admin') {
         return <Navigate to="/users" replace />;
