@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import CustomAlert from './CustomAlert';
 
 const DashboardLayout = () => {
     const { user, role, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
     const handleLogout = async () => {
+        setShowLogoutConfirm(false);
         try {
             await logout();
             navigate('/login');
@@ -58,7 +63,7 @@ const DashboardLayout = () => {
 
                 <div className="p-4 border-t border-slate-800 mt-auto">
                     <button
-                        onClick={handleLogout}
+                        onClick={() => setShowLogoutConfirm(true)}
                         className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl text-slate-300 hover:bg-red-500/10 hover:text-red-400 transition-colors border border-transparent hover:border-red-500/20"
                     >
                         <span>Logout</span>
@@ -68,13 +73,20 @@ const DashboardLayout = () => {
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-x-hidden min-h-screen relative">
-                {/* 
-                    This wrapper ensures that the animated background from index.css 
-                    only applies to the content area if the components use it,
-                    while keeping the sidebar clean.
-                */}
                 <Outlet />
             </main>
+
+            {/* Logout Confirmation Modal */}
+            <CustomAlert
+                isOpen={showLogoutConfirm}
+                onClose={() => setShowLogoutConfirm(false)}
+                onConfirm={handleLogout}
+                type="confirm"
+                title="Konfirmasi Logout"
+                message="Apakah Anda yakin ingin keluar dari sistem?"
+                confirmText="Ya, Logout"
+                cancelText="Batal"
+            />
         </div>
     );
 };

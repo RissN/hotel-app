@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import CustomAlert from '../components/CustomAlert';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -11,6 +12,9 @@ const UserManagement = () => {
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('Resepsionis');
     const [isCreating, setIsCreating] = useState(false);
+
+    // Custom alert state
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
     useEffect(() => {
         fetchUsers();
@@ -63,7 +67,12 @@ const UserManagement = () => {
             setRole('Resepsionis');
             fetchUsers();
             
-            alert('Pengguna baru berhasil ditambahkan!');
+            setAlertConfig({
+                isOpen: true,
+                title: 'Berhasil!',
+                message: 'Pengguna baru berhasil ditambahkan ke sistem.',
+                type: 'success',
+            });
 
         } catch (err) {
             console.error("User creation error:", err);
@@ -178,6 +187,15 @@ const UserManagement = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Custom Alert Modal */}
+            <CustomAlert
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
         </div>
     );
 };

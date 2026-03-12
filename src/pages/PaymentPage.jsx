@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import CustomAlert from '../components/CustomAlert';
 
 const ROOM_PRICES = {
     Standard: 1500000,
@@ -28,6 +29,7 @@ export default function PaymentPage() {
     const [cardExpiry, setCardExpiry] = useState('');
     const [bankRef, setBankRef] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
     const roomRate = ROOM_PRICES[reservationData.roomType] || 0;
 
@@ -98,7 +100,12 @@ export default function PaymentPage() {
 
             if (error) {
                 console.error('Error inserting to Supabase:', error);
-                alert(`Gagal menyimpan transaksi: ${error.message}\nPastikan tabel "transactions" sudah dibuat di Supabase sesuai dengan schema yang diperlukan.`);
+                setAlertConfig({
+                    isOpen: true,
+                    title: 'Gagal Menyimpan',
+                    message: `Gagal menyimpan transaksi: ${error.message}\nPastikan tabel "transactions" sudah dibuat di Supabase sesuai dengan schema yang diperlukan.`,
+                    type: 'error',
+                });
                 setIsProcessing(false);
                 return;
             }
@@ -108,7 +115,12 @@ export default function PaymentPage() {
 
         } catch (err) {
             console.error('Unexpected error:', err);
-            alert('Terjadi kesalahan yang tidak terduga saat memproses pembayaran.');
+            setAlertConfig({
+                isOpen: true,
+                title: 'Kesalahan',
+                message: 'Terjadi kesalahan yang tidak terduga saat memproses pembayaran.',
+                type: 'error',
+            });
             setIsProcessing(false);
         }
     };
@@ -341,6 +353,15 @@ export default function PaymentPage() {
                 </div>
 
             </div>
+
+            {/* Custom Alert Modal */}
+            <CustomAlert
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
         </div>
     );
 }
