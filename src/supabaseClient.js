@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 if (!supabaseUrl || !supabaseAnonKey) {
     console.warn(
@@ -10,4 +10,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
     )
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
+// Inisialisasi hanya jika URL dan Key valid agar tidak error "URL is required" yang menyebabkan blank page
+export const supabase = supabaseUrl && supabaseAnonKey 
+    ? createClient(supabaseUrl, supabaseAnonKey) 
+    : {
+        from: () => ({
+            insert: () => {
+                console.error("Supabase client is not initialized because environment variables are missing.");
+                return { error: new Error("Supabase is not configured. Variables missing.") };
+            }
+        })
+    };
+
