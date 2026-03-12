@@ -119,7 +119,6 @@ const UserManagement = () => {
                             >
                                 <option value="Resepsionis">Resepsionis</option>
                                 <option value="Admin">Admin</option>
-                                <option value="Superadmin">Superadmin</option>
                             </select>
                         </div>
                         <button
