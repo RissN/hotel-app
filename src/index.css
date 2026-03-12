@@ -23,3 +23,26 @@ body {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
   }
 }
+
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset shadows and borders for cleaner print */
+  * {
+    box-shadow: none !important;
+  }
+}

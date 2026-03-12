@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 const ROOM_PRICES = {
     Standard: 1500000,
@@ -26,6 +27,7 @@ export default function PaymentPage() {
     const [cardHolder, setCardHolder] = useState('');
     const [cardExpiry, setCardExpiry] = useState('');
     const [bankRef, setBankRef] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const roomRate = ROOM_PRICES[reservationData.roomType] || 0;
 
@@ -45,7 +47,10 @@ export default function PaymentPage() {
     const serviceCharge = Math.round(subtotal * 0.05);
     const grandTotal = subtotal + tax + serviceCharge;
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
+        setIsProcessing(true);
+        const bookingNo = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+
         const paymentData = {
             method: selectedMethod,
             roomRate,
@@ -60,7 +65,52 @@ export default function PaymentPage() {
             cardExpiry: selectedMethod === 'credit_card' ? cardExpiry : '',
             bankRef: selectedMethod === 'transfer' ? bankRef : '',
         };
-        navigate('/confirmation', { state: { reservationData, paymentData } });
+
+        try {
+            // Mapping for Supabase insertion
+            const transactionRecord = {
+                booking_no: bookingNo,
+                guest_name: reservationData.name,
+                email: reservationData.email,
+                phone: reservationData.phone,
+                room_no: reservationData.roomNo,
+                room_type: reservationData.roomType,
+                number_of_rooms: numRooms,
+                number_of_persons: parseInt(reservationData.numberOfPerson) || 1,
+                arrival_date: reservationData.arrivalDate,
+                departure_date: reservationData.departureDate,
+                total_nights: totalNights,
+                room_rate: roomRate,
+                subtotal: subtotal,
+                tax: tax,
+                service_charge: serviceCharge,
+                grand_total: grandTotal,
+                payment_method: selectedMethod,
+                payment_ref: selectedMethod === 'transfer' ? bankRef : (selectedMethod === 'credit_card' ? 'CREDIT_CARD' : ''),
+                nationality: reservationData.nationality,
+                company: reservationData.company,
+                receptionist: reservationData.receptionist
+            };
+
+            const { error } = await supabase
+                .from('transactions')
+                .insert([transactionRecord]);
+
+            if (error) {
+                console.error('Error inserting to Supabase:', error);
+                alert(`Gagal menyimpan transaksi: ${error.message}\nPastikan tabel "transactions" sudah dibuat di Supabase sesuai dengan schema yang diperlukan.`);
+                setIsProcessing(false);
+                return;
+            }
+
+            // Navigate to success page with data
+            navigate('/payment-success', { state: { reservationData, paymentData, bookingNo } });
+
+        } catch (err) {
+            console.error('Unexpected error:', err);
+            alert('Terjadi kesalahan yang tidak terduga saat memproses pembayaran.');
+            setIsProcessing(false);
+        }
     };
 
     return (
@@ -196,16 +246,32 @@ export default function PaymentPage() {
                         <button
                             type="button"
                             onClick={() => navigate('/', { state: { reservationData } })}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition"
+                            disabled={isProcessing}
+                            className={`text-sm font-medium flex items-center gap-1 transition ${isProcessing ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}
                         >
                             ← Kembali ke Form
                         </button>
                         <button
                             type="button"
                             onClick={handleConfirm}
-                            className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-150"
+                            disabled={isProcessing}
+                            className={`font-bold py-3 px-8 rounded-xl shadow-md transition-all duration-150 ${
+                                isProcessing 
+                                ? 'bg-blue-400 cursor-not-allowed justify-center flex items-center gap-2 text-white' 
+                                : 'bg-blue-600 hover:bg-blue-700 active:scale-95 text-white hover:shadow-lg'
+                            }`}
                         >
-                            Konfirmasi Pembayaran →
+                            {isProcessing ? (
+                                <>
+                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Memproses...
+                                </>
+                            ) : (
+                                "Konfirmasi Pembayaran →"
+                            )}
                         </button>
                     </div>
                 </div>
