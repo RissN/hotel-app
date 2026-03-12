@@ -18,6 +18,10 @@ dist-ssr
 !.env.example
 
 
+# Internal docs & guides (not for public repo)
+PANDUAN_SUPABASE.md
+RPC_SETUP.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
