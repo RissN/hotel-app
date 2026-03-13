@@ -283,7 +283,6 @@ const UserManagement = () => {
                                                     >
                                                         <option value="Resepsionis">Resepsionis</option>
                                                         <option value="Admin">Admin</option>
-                                                        <option value="Superadmin">Superadmin</option>
                                                     </select>
                                                 ) : (
                                                     <span className={`px-3 py-1 text-xs font-medium rounded-full ${
