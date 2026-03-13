@@ -152,263 +152,331 @@ const UserManagement = () => {
         }
     };
 
-    // --- EDIT LOGIC ---
-    const handleEditClick = (user) => {
+    // --- MODAL LOGIC (ADD & EDIT) ---
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState('add');
+
+    const openAddModal = () => {
+        setModalMode('add');
+        setEmail('');
+        setPassword('');
+        setRole('Resepsionis');
+        setError(null);
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (user) => {
+        setModalMode('edit');
         setEditingUserId(user.user_id);
-        setEditRoleValue(user.role);
-        setEditEmailValue(user.email || ''); // Assuming user object has email joined, if not it will be blank
-        setEditPasswordValue(''); // Keep blank for security, only update if typed
-    };
-
-    const handleCancelEdit = () => {
-        setEditingUserId(null);
-        setEditRoleValue('');
-        setEditEmailValue('');
+        setEditEmailValue(user.email || '');
         setEditPasswordValue('');
+        setEditRoleValue(user.role);
+        setError(null);
+        setIsModalOpen(true);
     };
 
-    const handleSaveEdit = async (userId) => {
-        setIsActionLoading(true);
-        try {
-            // Note: A new RPC `update_user_full_by_admin` needs to be added in Supabase to update email/password:
-            /*
-            CREATE OR REPLACE FUNCTION update_user_full_by_admin(target_user_id uuid, new_role text, new_email text, new_password text)
-            RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
-            BEGIN
-              IF NOT EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('Admin', 'Superadmin')) THEN RAISE EXCEPTION 'Unauthorized'; END IF;
-              UPDATE user_roles SET role = new_role WHERE user_id = target_user_id;
-              IF new_email IS NOT NULL AND new_email != '' THEN
-                 UPDATE auth.users SET email = new_email WHERE id = target_user_id;
-                 UPDATE auth.identities SET identity_data = jsonb_set(identity_data, '{email}', to_jsonb(new_email)) WHERE user_id = target_user_id;
-              END IF;
-              IF new_password IS NOT NULL AND new_password != '' THEN
-                 UPDATE auth.users SET encrypted_password = crypt(new_password, gen_salt('bf')) WHERE id = target_user_id;
-              END IF;
-            END; $$;
-            */
-            const { error: rpcError } = await supabase.rpc('update_user_full_by_admin', {
-                target_user_id: userId,
-                new_role: editRoleValue,
-                new_email: editEmailValue || null,
-                new_password: editPasswordValue || null
-            });
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setEditingUserId(null);
+    };
 
-            if (rpcError) throw rpcError;
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
 
-            fetchUsers();
-            setEditingUserId(null);
-            
-            setAlertConfig({
-                isOpen: true,
-                title: 'Perubahan Disimpan',
-                message: 'Role pengguna berhasil diperbarui.',
-                type: 'success',
-                onConfirm: null
-            });
-        } catch (err) {
-            console.error("Edit user error:", err);
-            setAlertConfig({
-                isOpen: true,
-                title: 'Gagal Memperbarui',
-                message: err.message || 'Terjadi kesalahan saat mengubah role pengguna.',
-                type: 'error',
-                onConfirm: null
-            });
-        } finally {
-            setIsActionLoading(false);
+        if (modalMode === 'add') {
+            setIsCreating(true);
+            try {
+                const { error: rpcError } = await supabase.rpc('create_user_by_admin', {
+                    email: email,
+                    password: password,
+                    assign_role: role
+                });
+                if (rpcError) throw rpcError;
+                
+                fetchUsers();
+                closeModal();
+                setAlertConfig({ isOpen: true, title: 'Berhasil!', message: 'Pengguna baru berhasil ditambahkan.', type: 'success' });
+            } catch (err) {
+                console.error("User creation error:", err);
+                setError(err.message || 'Terjadi kesalahan saat membuat pengguna.');
+            } finally {
+                setIsCreating(false);
+            }
+        } else {
+            setIsActionLoading(true);
+            try {
+                const { error: rpcError } = await supabase.rpc('update_user_full_by_admin', {
+                    target_user_id: editingUserId,
+                    new_role: editRoleValue,
+                    new_email: editEmailValue || null,
+                    new_password: editPasswordValue || null
+                });
+                if (rpcError) throw rpcError;
+                
+                fetchUsers();
+                closeModal();
+                setAlertConfig({ isOpen: true, title: 'Perubahan Disimpan', message: 'Data pengguna berhasil diperbarui.', type: 'success' });
+            } catch (err) {
+                console.error("Edit user error:", err);
+                setError(err.message || 'Terjadi kesalahan saat mengubah data pengguna.');
+            } finally {
+                setIsActionLoading(false);
+            }
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Memuat data pengguna...</div>;
+    const stats = {
+        total: users.length,
+        admin: users.filter(u => u.role === 'Admin' || u.role === 'Superadmin').length,
+        resepsionis: users.filter(u => u.role === 'Resepsionis').length
+    };
+
+    if (loading) return (
+        <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+        </div>
+    );
 
     return (
-        <div className="p-8 max-w-5xl mx-auto">
-            <h1 className="text-3xl font-bold text-slate-900 mb-8">Manajemen Pengguna</h1>
+        <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Manajemen Pengguna</h1>
+                    <p className="text-slate-500 mt-1">Kelola akses, role, dan informasi akun staf hotel.</p>
+                </div>
+                <button
+                    onClick={openAddModal}
+                    className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-indigo-700 transition-all shadow-sm shadow-indigo-200 active:scale-95"
+                >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Tambah Pengguna
+                </button>
+            </div>
 
+            {/* ERROR ALERT */}
             {error && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-8 border border-red-100">
-                    {error}
+                <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-8 border border-red-100 flex items-center gap-3">
+                    <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <p>{error}</p>
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Form Add User */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 className="text-xl font-semibold mb-6">Tambah Pengguna Baru</h2>
-                    <form onSubmit={handleCreateUser} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                            <input
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
-                            <input
-                                type="password"
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Role</label>
-                            <select
-                                value={role}
-                                onChange={(e) => setRole(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                            >
-                                <option value="Resepsionis">Resepsionis</option>
-                                <option value="Admin">Admin</option>
-                            </select>
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={isCreating}
-                            className="w-full bg-slate-900 text-white py-2 rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-50"
-                        >
-                            {isCreating ? 'Menambahkan...' : 'Tambah Pengguna'}
-                        </button>
-                    </form>
-                </div>
-
-                {/* List Users (Roles) */}
-                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                        <h2 className="text-xl font-semibold">Daftar Role Pengguna</h2>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
-                                <tr>
-                                    <th className="px-6 py-4 text-left font-medium">Data Pengguna</th>
-                                    <th className="px-6 py-4 text-left font-medium">Role</th>
-                                    <th className="px-6 py-4 text-left font-medium">Dibuat Pada</th>
-                                    <th className="px-6 py-4 text-right font-medium">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {users.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="4" className="px-6 py-8 text-center text-slate-500">
-                                            Tidak ada data untuk ditampilkan. Pastikan RLS Supabase dikonfigurasi.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    users.map((u) => (
-                                        <tr key={u.user_id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4 text-sm font-mono text-slate-600 truncate max-w-[200px]" title={u.user_id}>
-                                                {editingUserId === u.user_id ? (
-                                                    <div className="space-y-2">
-                                                        <input 
-                                                            type="email" 
-                                                            placeholder="Email" 
-                                                            value={editEmailValue} 
-                                                            onChange={(e) => setEditEmailValue(e.target.value)} 
-                                                            className="w-full px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-sans" 
-                                                        />
-                                                        <input 
-                                                            type="password" 
-                                                            placeholder="Password Baru (Kosongkan jika tidak diubah)" 
-                                                            value={editPasswordValue} 
-                                                            onChange={(e) => setEditPasswordValue(e.target.value)} 
-                                                            className="w-full px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-sans" 
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <span>{u.email || u.user_id}</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {editingUserId === u.user_id ? (
-                                                    <select
-                                                        value={editRoleValue}
-                                                        onChange={(e) => setEditRoleValue(e.target.value)}
-                                                        className="px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm w-32"
-                                                    >
-                                                        <option value="Resepsionis">Resepsionis</option>
-                                                        <option value="Admin">Admin</option>
-                                                    </select>
-                                                ) : (
-                                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                                                        u.role === 'Superadmin' ? 'bg-purple-100 text-purple-700' :
-                                                        u.role === 'Admin' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-green-100 text-green-700'
-                                                    }`}>
-                                                        {u.role}
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-slate-500">
-                                                {new Date(u.created_at).toLocaleDateString('id-ID')}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    {editingUserId === u.user_id ? (
-                                                        <>
-                                                            <button
-                                                                onClick={handleCancelEdit}
-                                                                className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-colors"
-                                                                title="Batal"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                </svg>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleSaveEdit(u.user_id)}
-                                                                disabled={isActionLoading}
-                                                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50"
-                                                                title="Simpan"
-                                                            >
-                                                                {isActionLoading ? (
-                                                                    <svg className="animate-spin w-4 h-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                                                ) : (
-                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                                    </svg>
-                                                                )}
-                                                            </button>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleEditClick(u)}
-                                                                disabled={isActionLoading || u.role === 'Superadmin'}
-                                                                className={`p-2 rounded-lg transition-colors flex items-center justify-center ${u.role === 'Superadmin' ? 'text-slate-300 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'}`}
-                                                                title={u.role === 'Superadmin' ? 'Superadmin tidak dapat diedit' : 'Edit Role'}
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                                </svg>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteClick(u)}
-                                                                disabled={isActionLoading || u.role === 'Superadmin'}
-                                                                className={`p-2 rounded-lg transition-colors flex items-center justify-center ${u.role === 'Superadmin' ? 'text-slate-300 cursor-not-allowed' : 'text-red-600 hover:bg-red-50'}`}
-                                                                title={u.role === 'Superadmin' ? 'Superadmin tidak dapat dihapus' : 'Hapus Pengguna'}
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                    <div>
+                        <p className="text-slate-500 text-sm font-medium">Total Akun</p>
+                        <p className="text-2xl font-bold text-slate-800">{stats.total}</p>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4">
+                    <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    </div>
+                    <div>
+                        <p className="text-slate-500 text-sm font-medium">Admin & Superadmin</p>
+                        <p className="text-2xl font-bold text-slate-800">{stats.admin}</p>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4">
+                    <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    </div>
+                    <div>
+                        <p className="text-slate-500 text-sm font-medium">Resepsionis</p>
+                        <p className="text-2xl font-bold text-slate-800">{stats.resepsionis}</p>
                     </div>
                 </div>
             </div>
+
+            {/* Main Table */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-slate-50/50 border-b border-slate-100">
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pengguna</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role Akses</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Bergabung Sejak</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {users.length === 0 ? (
+                                <tr>
+                                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <svg className="w-12 h-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                            <p className="text-lg font-medium text-slate-700">Tidak ada data pengguna</p>
+                                            <p className="text-sm mt-1">Pastikan fungsi Database telah di-setup.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                users.map((u) => {
+                                    const displayEmail = u.email || 'Email tidak tersedia';
+                                    const initial = displayEmail !== 'Email tidak tersedia' ? displayEmail.charAt(0).toUpperCase() : '?';
+                                    return (
+                                        <tr key={u.user_id} className="hover:bg-slate-50 transition-colors group">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700 flex items-center justify-center font-bold text-lg shrink-0 shadow-sm border border-white">
+                                                        {initial}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-bold text-slate-800 truncate">{displayEmail}</p>
+                                                        <p className="text-xs font-mono text-slate-400 truncate mt-0.5" title={u.user_id}>{u.user_id}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-sm
+                                                    ${u.role === 'Superadmin' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                    u.role === 'Admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                                    'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${u.role === 'Superadmin' ? 'bg-purple-500' : u.role === 'Admin' ? 'bg-indigo-500' : 'bg-emerald-500'}`}></span>
+                                                    {u.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-slate-500 hidden sm:table-cell">
+                                                {new Date(u.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => openEditModal(u)}
+                                                        disabled={u.role === 'Superadmin'}
+                                                        className={`p-2 rounded-xl border shadow-sm flex items-center gap-2 text-sm font-medium transition-all ${
+                                                            u.role === 'Superadmin' 
+                                                            ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' 
+                                                            : 'bg-white text-indigo-600 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
+                                                        }`}
+                                                        title={u.role === 'Superadmin' ? 'Superadmin tidak dapat diedit' : 'Edit Pengguna'}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                        <span className="hidden lg:inline">Edit</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteClick(u)}
+                                                        disabled={u.role === 'Superadmin'}
+                                                        className={`p-2 rounded-xl border shadow-sm flex items-center gap-2 text-sm font-medium transition-all ${
+                                                            u.role === 'Superadmin' 
+                                                            ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' 
+                                                            : 'bg-white text-red-600 border-slate-200 hover:border-red-300 hover:bg-red-50'
+                                                        }`}
+                                                        title={u.role === 'Superadmin' ? 'Superadmin tidak dapat dihapus' : 'Hapus Pengguna'}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Modal Form (Add & Edit) */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal}></div>
+                    <div className="relative bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        {/* Modal Header */}
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <h3 className="text-xl font-bold text-slate-800">
+                                {modalMode === 'add' ? 'Tambah Pengguna Baru' : 'Edit Pengguna'}
+                            </h3>
+                            <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-100 p-2 rounded-full transition-colors border shadow-sm">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <form onSubmit={handleFormSubmit} className="p-6">
+                            <div className="space-y-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Akses</label>
+                                    <input
+                                        type="email"
+                                        required={modalMode === 'add'}
+                                        value={modalMode === 'add' ? email : editEmailValue}
+                                        onChange={(e) => modalMode === 'add' ? setEmail(e.target.value) : setEditEmailValue(e.target.value)}
+                                        placeholder="contoh@ppkd.com"
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-slate-800 font-medium"
+                                    />
+                                    {modalMode === 'edit' && <p className="text-xs text-slate-400 mt-1.5">Ubah email pengguna (opsional).</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                                        Kata Sandi {modalMode === 'edit' && <span className="text-slate-400 font-normal">(Opsional)</span>}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        required={modalMode === 'add'}
+                                        value={modalMode === 'add' ? password : editPasswordValue}
+                                        onChange={(e) => modalMode === 'add' ? setPassword(e.target.value) : setEditPasswordValue(e.target.value)}
+                                        placeholder={modalMode === 'add' ? "Minimal 6 karakter" : "Isi untuk mengganti kata sandi"}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-slate-800 font-medium"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Role (Hak Akses)</label>
+                                    <div className="relative">
+                                        <select
+                                            value={modalMode === 'add' ? role : editRoleValue}
+                                            onChange={(e) => modalMode === 'add' ? setRole(e.target.value) : setEditRoleValue(e.target.value)}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all appearance-none font-medium text-slate-700"
+                                        >
+                                            <option value="Resepsionis">Resepsionis (Front Desk)</option>
+                                            <option value="Admin">Admin (Manager)</option>
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="px-5 py-2.5 text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl font-medium transition-colors"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={modalMode === 'add' ? isCreating : isActionLoading}
+                                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-sm shadow-indigo-200 flex items-center justify-center min-w-[130px] disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    {(modalMode === 'add' ? isCreating : isActionLoading) ? (
+                                        <div className="flex items-center gap-2">
+                                            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            <span>Menyimpan...</span>
+                                        </div>
+                                    ) : (
+                                        modalMode === 'add' ? 'Simpan Data' : 'Perbarui'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Custom Alert Modal */}
             <CustomAlert
