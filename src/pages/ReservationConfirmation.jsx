@@ -55,210 +55,144 @@ export default function ReservationConfirmation() {
                 </button>
             </div>
 
-            <div className="max-w-3xl mx-auto bg-white p-10 md:p-14 shadow-lg print:shadow-none print:p-0">
+            <div id="print-area" className="max-w-3xl mx-auto bg-white p-10 md:p-14 shadow-lg print:shadow-none print:p-0">
 
                 {/* Header */}
-                <div className="text-center mb-10 border-b-2 border-gray-800 pb-6">
-                    <h1 className="text-2xl font-bold tracking-widest text-gray-900 pb-1">PPKD HOTEL</h1>
+                <div className="text-center mb-4">
+                    <div className="flex justify-center mb-1">
+                        <img 
+                            src="/logo.png" 
+                            alt="Logo PPKD Jakarta Pusat" 
+                            className="w-14 h-14 object-contain"
+                        />
+                    </div>
+                    <h1 className="text-[16px] font-bold tracking-widest text-gray-900 uppercase">PPKD HOTEL</h1>
                 </div>
 
-                <h2 className="text-xl font-bold text-gray-800 mb-8 border-b border-gray-300 inline-block pr-10">Reservation Confirmation</h2>
+                <div className="mb-3">
+                    <h2 className="text-[14px] font-bold text-gray-800 mb-1">Reservation Confirmation</h2>
+                    <div className="border-b-2 border-gray-900 w-full mb-0.5" />
+                    <div className="border-b border-gray-900 w-full" />
+                </div>
 
                 {/* Company / Agent Info */}
-                <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-10 text-sm">
-                    <div className="flex">
-                        <span className="w-36 text-gray-600">To.</span>
-                        <span className="font-semibold">: {reservationData.name || '-'}</span>
+                <div className="grid grid-cols-2 gap-x-8 text-[10px] mb-4">
+                    <div className="space-y-1">
+                        <div className="flex"><span className="w-28 text-gray-800 shrink-0">To.</span><span className="font-bold">: {reservationData.name || '-'}</span></div>
+                        <div className="flex"><span className="w-28 text-gray-800 shrink-0">Company / Agent</span><span className="font-medium">: {reservationData.company || 'PPKD JP'}</span></div>
+                        <div className="flex"><span className="w-28 text-gray-800 shrink-0">Booking No.</span><span className="font-medium">: {bookingNo}</span></div>
+                        <div className="flex"><span className="w-28 text-gray-800 shrink-0">Book By</span><span className="font-medium">: {reservationData.receptionist || 'Resepsionis'} (Hotel)</span></div>
+                        <div className="flex"><span className="w-28 text-gray-800 shrink-0">Phone</span><span className="font-medium">: {reservationData.phone || '-'}</span></div>
+                        <div className="flex flex-wrap"><span className="w-28 text-gray-800 shrink-0">Email</span><span className="text-blue-600 underline">: {reservationData.email || '-'}</span></div>
                     </div>
-                    <div className="col-span-2 mt-4 grid grid-cols-2 gap-x-8 gap-y-3">
-                        <div className="space-y-3">
-                            <div className="flex">
-                                <span className="w-36 text-gray-600">Company / Agent</span>
-                                <span className="font-medium">: {reservationData.company || '-'}</span>
-                            </div>
-                            <div className="flex">
-                                <span className="w-36 text-gray-600">Booking No.</span>
-                                <span className="font-medium">: {bookingNo}</span>
-                            </div>
-                            <div className="flex">
-                                <span className="w-36 text-gray-600">Book By</span>
-                                <span className="font-medium">: {reservationData.receptionist || '-'}</span>
-                            </div>
-                            <div className="flex">
-                                <span className="w-36 text-gray-600">Phone</span>
-                                <span className="font-medium">: {reservationData.phone || '-'}</span>
-                            </div>
-                            <div className="flex">
-                                <span className="w-36 text-gray-600">Email</span>
-                                <span className="font-medium">: {reservationData.email || '-'}</span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <div className="flex">
-                                <span className="w-20 text-gray-600">Telp</span>
-                                <span className="font-medium">: {reservationData.phone || '-'}</span>
-                            </div>
-                            <div className="flex">
-                                <span className="w-20 text-gray-600">Fax</span>
-                                <span className="font-medium">: -</span>
-                            </div>
-                            <div className="flex">
-                                <span className="w-20 text-gray-600">Email</span>
-                                <span className="font-medium">: {reservationData.email || '-'}</span>
-                            </div>
-                            <div className="flex">
-                                <span className="w-20 text-gray-600">Date</span>
-                                <span className="font-medium">: {new Date().toLocaleDateString('id-ID')}</span>
-                            </div>
-                        </div>
+                    <div className="space-y-1">
+                        <div className="flex"><span className="w-20 text-gray-800 shrink-0">Telp</span><span className="font-medium">: (021) 1234567</span></div>
+                        <div className="flex"><span className="w-20 text-gray-800 shrink-0">Fax</span><span className="font-medium">: (021) 7654321</span></div>
+                        <div className="flex flex-wrap"><span className="w-20 text-gray-800 shrink-0">Email</span><span className="text-blue-600 underline">: info@ppkdhotel.com</span></div>
+                        <div className="flex"><span className="w-20 text-gray-800 shrink-0">Date</span><span className="font-medium">: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
                     </div>
                 </div>
 
-                <hr className="mb-8 border-gray-300" />
+                <div className="border-b border-gray-900 w-full mb-4" />
 
-                {/* Guest Info */}
-                <div className="space-y-3 mb-10 text-sm">
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Guest Name</span>
-                        <span className="font-medium">: {reservationData.name || '-'}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Arrival Date</span>
-                        <span className="font-medium">: {reservationData.arrivalDate || '-'}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Departure Date</span>
-                        <span className="font-medium">: {reservationData.departureDate || '-'}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Total Night</span>
-                        <span className="font-medium">: {totalNights}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Room No.</span>
-                        <span className="font-medium">: {reservationData.roomNo || '-'}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Room/Unit Type</span>
-                        <span className="font-medium">: {reservationData.roomType || '-'}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">No. of Rooms</span>
-                        <span className="font-medium">: {reservationData.numberOfRoom || '-'}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Person Pax</span>
-                        <span className="font-medium">: {reservationData.numberOfPerson || '-'}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Nationality</span>
-                        <span className="font-medium">: {reservationData.nationality || '-'}</span>
-                    </div>
-                    <div className="flex">
-                        <span className="w-40 text-gray-600">Room Rate / Night</span>
-                        <span className="font-medium">: {paymentData ? formatIDR(paymentData.roomRate) : 'IDR -'}</span>
-                    </div>
+                {/* Guest & Room Details */}
+                <div className="space-y-1.5 text-[10px] mb-4">
+                    <div className="flex"><span className="w-32 text-gray-800 shrink-0">First Name</span><span className="font-bold uppercase">: {reservationData.name || '-'}</span></div>
+                    <div className="flex"><span className="w-32 text-gray-800 shrink-0">Arrival Date</span><span className="font-bold">: {reservationData.arrivalDate ? new Date(reservationData.arrivalDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span></div>
+                    <div className="flex"><span className="w-32 text-gray-800 shrink-0">Departure Date</span><span className="font-bold">: {reservationData.departureDate ? new Date(reservationData.departureDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span></div>
+                    <div className="flex"><span className="w-32 text-gray-800 shrink-0">Total Night</span><span className="font-medium">: {totalNights} Malam (Nights)</span></div>
+                    <div className="flex"><span className="w-32 text-gray-800 shrink-0">Room/Unit Type</span><span className="font-medium">: {reservationData.roomNo ? `Kamar ${reservationData.roomNo}` : ''} ({reservationData.roomType || '-'})</span></div>
+                    <div className="flex"><span className="w-32 text-gray-800 shrink-0">Person Pax</span><span className="font-medium">: {reservationData.numberOfPerson || '-'} Orang (Person)</span></div>
+                    <div className="flex mt-2"><span className="w-32 text-red-600 shrink-0">Room Rate Net</span><span className="font-bold text-red-600">: {paymentData ? formatIDR(paymentData.roomRate || 0) : 'Rp -'} / Malam</span></div>
                 </div>
 
-                {/* ── Pricing Table ── */}
-                {paymentData && (
-                    <div className="mb-8">
-                        <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
-                            <thead className="bg-gray-100">
-                                <tr>
-                                    <th className="text-left px-4 py-2 font-semibold text-gray-700" colSpan={2}>Rincian Biaya / Charge Details</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                <tr>
-                                    <td className="px-4 py-2 text-gray-600">
-                                        {reservationData.roomType} × {paymentData.numRooms} kamar × {paymentData.totalNights} malam
-                                    </td>
-                                    <td className="px-4 py-2 text-right font-medium">{formatIDR(paymentData.subtotal)}</td>
-                                </tr>
-                                <tr>
-                                    <td className="px-4 py-2 text-gray-600">PPN 11%</td>
-                                    <td className="px-4 py-2 text-right">{formatIDR(paymentData.tax)}</td>
-                                </tr>
-                                <tr>
-                                    <td className="px-4 py-2 text-gray-600">Service Charge 5%</td>
-                                    <td className="px-4 py-2 text-right">{formatIDR(paymentData.serviceCharge)}</td>
-                                </tr>
-                                <tr className="bg-gray-800 text-white">
-                                    <td className="px-4 py-2 font-bold">TOTAL</td>
-                                    <td className="px-4 py-2 text-right font-bold text-base">{formatIDR(paymentData.grandTotal)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div className="mt-2 text-sm text-gray-600 flex items-center gap-2">
-                            <span className="font-medium">Metode Pembayaran:</span>
-                            <span>{PAYMENT_METHOD_LABEL[paymentData.method] || paymentData.method}</span>
-                            {paymentData.method === 'transfer' && paymentData.bankRef && (
-                                <span className="text-gray-400">· Ref: {paymentData.bankRef}</span>
-                            )}
-                            {paymentData.method === 'credit_card' && paymentData.cardHolder && (
-                                <span className="text-gray-400">· {paymentData.cardHolder}</span>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Guarantee Info */}
-                <div className="text-sm text-gray-700 leading-relaxed mb-8">
-                    <p className="mb-4">
-                        Please guarantee this booking with credit card number with clear copy of the card both sides and card holder signature in the column provided the copy of credit card both sides should be faxed to hotel fax number.<br />
-                        Please settle your outstanding to or account:
+                {/* Guarantee Info Box */}
+                <div className="border border-gray-400 bg-[#fafafa] px-3 py-2.5 text-[9px] text-gray-800 leading-relaxed mb-4 rounded-sm">
+                    <p className="mb-2">
+                        Please guarantee this booking with credit card number with clear copy of the card both sides and card holder signature in the column provided the copy of credit card both sides should be faxed to hotel fax number.
                     </p>
+                    <p className="font-bold text-red-700 mb-2">Please settle your outstanding to or account:</p>
 
-                    <div className="space-y-1 mb-8">
-                        <p className="font-medium border-b border-gray-300 inline-block pb-1 mb-2">Bank Transfer</p>
-                        <div className="flex"><span className="w-40">Mandiri Account</span><span>: 123-456-789-0</span></div>
-                        <div className="flex"><span className="w-40">Mandiri Name Account</span><span>: PPKD HOTEL</span></div>
-                    </div>
-
-                    <hr className="mb-8 border-gray-300" />
-                    <p className="font-medium mb-4">Reservation guaranteed by the following credit card:</p>
-
-                    <div className="space-y-3 w-2/3">
-                        <div className="flex justify-between border-b border-gray-300 pb-1">
-                            <span className="text-gray-600">Card Number</span><span>:</span>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="border-l-[3px] border-blue-400 pl-2">
+                            <p className="font-bold text-gray-900 mb-0.5">Bank Transfer</p>
+                            <p className="mb-2">Bank Mandiri (Cab. Jakarta)</p>
+                            
+                            <p className="font-bold text-gray-900 mb-0.5">Mandiri Name Account</p>
+                            <p>PPKD HOTEL JAKARTA PUSAT</p>
                         </div>
-                        <div className="flex justify-between border-b border-gray-300 pb-1">
-                            <span className="text-gray-600">Card holder name</span><span>:</span>
-                        </div>
-                        <div className="flex justify-between border-b border-gray-300 pb-1">
-                            <span className="text-gray-600">Card Type</span><span>:</span>
-                        </div>
-                        <div className="flex justify-between border-b border-gray-300 pb-1">
-                            <span className="text-gray-600">Or by Bank Transfer to</span><span>:</span>
-                        </div>
-                        <div className="flex justify-between border-b border-gray-300 pb-1">
-                            <span className="text-gray-600">Expired date/month/year</span><span>:</span>
-                        </div>
-                        <div className="flex justify-between mt-6">
-                            <span className="text-gray-600">Card holder signature</span>
-                            <div className="w-48 border-b-2 border-gray-400"></div>
+                        <div>
+                            <p className="font-bold text-gray-900 mb-0.5">Mandiri Account</p>
+                            <p className="font-mono text-[10px]">123-00-9876543-2</p>
                         </div>
                     </div>
                 </div>
 
-                <hr className="mb-6 border-gray-300" />
+                <div className="text-[10px] mb-4">
+                    <p className="mb-2 text-gray-800">Reservation guaranteed by the following credit card:</p>
+
+                    <div className="space-y-2 w-3/4">
+                        <div className="flex items-center">
+                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Number</span>
+                            <span className="mr-2">:</span>
+                            <div className="flex-1 border-b border-gray-500 min-w-0" />
+                        </div>
+                        <div className="flex items-center">
+                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Holder name</span>
+                            <span className="mr-2">:</span>
+                            <div className="flex-1 border-b border-gray-500 min-w-0" />
+                        </div>
+                        <div className="flex items-center">
+                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Type</span>
+                            <span className="mr-2">:</span>
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Visa</label>
+                                <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Master</label>
+                                <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Amex</label>
+                            </div>
+                        </div>
+                        <div className="flex items-center">
+                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Or by Bank Transfer to</span>
+                            <span className="mr-2">:</span>
+                            <div className="flex-1 border-b border-gray-500 min-w-0" />
+                        </div>
+                        <div className="flex items-center">
+                            <span className="w-40 text-red-600 shrink-0 whitespace-nowrap">Expired date/month/year</span>
+                            <span className="mr-2">:</span>
+                            <div className="flex items-center text-gray-500 w-32">
+                                <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
+                                <span className="mx-1">/</span>
+                                <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
+                                <span className="mx-1">/</span>
+                                <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-end mt-4 w-3/4">
+                        <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card holder signature</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex-1 border-b border-gray-500 min-w-0" />
+                    </div>
+                </div>
 
                 {/* Cancellation Policy */}
-                <div className="text-xs text-gray-600">
-                    <p className="font-medium mb-2 underline">Cancellation policy:</p>
-                    <ol className="list-decimal pl-4 space-y-1">
+                <div className="bg-[#f2f2f2] px-3 py-2 text-[8px] text-gray-700">
+                    <p className="font-bold mb-0.5 underline text-gray-900">Cancellation policy:</p>
+                    <ol className="list-decimal pl-3 space-y-0.5">
                         <li>Please note that check in time is 02.00 pm and check out time 12.00 pm.</li>
                         <li>All non guaranteed reservations will automatically be released on 6 pm.</li>
                         <li>The Hotel will charge 1 night for guaranteed reservations that have not been canceling before the day of arrival. Please carefully note your cancellation number.</li>
                     </ol>
                 </div>
 
-                <div className="mt-16 text-right">
-                    <div className="inline-block w-48 border-b-2 border-gray-800"></div>
-                    <p className="text-xs text-gray-500 mt-2 mr-10">Authorized Signature</p>
-                </div>
+                {/* Add standard global print styles directly inline to ensure scaling and no extra margin pages */}
+                <style dangerouslySetInnerHTML={{__html: `
+                    @media print {
+                        @page { margin: 0; size: A4 portrait; }
+                        body { margin: 0; padding: 0.5cm; }
+                    }
+                `}} />
 
             </div>
         </div>
