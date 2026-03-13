@@ -64,7 +64,7 @@ export default function RegistrationForm() {
                 <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-8 py-8 text-center text-white">
                     <div className="flex justify-center mb-4">
                         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border-4 border-white overflow-hidden shadow-lg">
-                            <img src="/logo.jpg" alt="PPKD Jakarta Pusat Logo" className="w-full h-full object-cover" />
+                            <img src="/logo.png" alt="PPKD Jakarta Pusat Logo" className="w-full h-full object-cover" />
                         </div>
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">PPKD HOTEL</h1>

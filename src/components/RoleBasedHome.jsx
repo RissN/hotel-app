@@ -9,7 +9,7 @@ const RoleBasedHome = () => {
     console.log("RoleBasedHome routing decision for role:", role);
 
     if (role === 'Superadmin' || role === 'Admin') {
-        return <Navigate to="/users" replace />;
+        return <Navigate to="/dashboard" replace />;
     } else if (role === 'Resepsionis') {
         return <Navigate to="/registration" replace />;
     } else {

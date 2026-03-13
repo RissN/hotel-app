@@ -59,11 +59,6 @@ export default function ReservationConfirmation() {
 
                 {/* Header */}
                 <div className="text-center mb-10 border-b-2 border-gray-800 pb-6">
-                    <div className="flex justify-center mb-4">
-                        <div className="w-24 h-24 border-2 border-gray-800 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-bold text-gray-800 text-center uppercase">DKI Jakarta<br />Pusat</span>
-                        </div>
-                    </div>
                     <h1 className="text-2xl font-bold tracking-widest text-gray-900 pb-1">PPKD HOTEL</h1>
                 </div>
 

@@ -5,6 +5,7 @@ import PaymentSuccess from './pages/PaymentSuccess'
 import ReservationConfirmation from './pages/ReservationConfirmation'
 import Login from './pages/Login'
 import DashboardLayout from './components/DashboardLayout'
+import Dashboard from './pages/Dashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import UserManagement from './pages/UserManagement'
 import RoleBasedHome from './components/RoleBasedHome'
@@ -22,6 +23,11 @@ function App() {
                         
                         {/* Dynamic Homepage based on role */}
                         <Route path="/" element={<RoleBasedHome />} />
+                        
+                        {/* New Dashboard for Admins / Superadmins */}
+                        <Route element={<ProtectedRoute allowedRoles={['Superadmin', 'Admin']} />}>
+                            <Route path="/dashboard" element={<Dashboard />} />
+                        </Route>
                         
                         {/* Accessible to all logged-in roles */}
                         <Route path="/registration" element={<RegistrationForm />} />

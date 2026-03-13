@@ -117,9 +117,11 @@ export default function PaymentSuccess() {
                 {/* Header */}
                 <div className="text-center mb-8 border-b-2 border-gray-800 pb-5">
                     <div className="flex justify-center mb-3">
-                        <div className="w-20 h-20 border-2 border-gray-800 rounded-full flex items-center justify-center print:w-16 print:h-16">
-                            <span className="text-xs font-bold text-gray-800 text-center uppercase">DKI Jakarta<br />Pusat</span>
-                        </div>
+                        <img 
+                            src="/logo.png" 
+                            alt="Logo PPKD Jakarta Pusat" 
+                            className="w-24 h-24 object-contain print:w-20 print:h-20"
+                        />
                     </div>
                     <h1 className="text-2xl font-bold tracking-widest text-gray-900 pb-1 print:text-xl">PPKD HOTEL</h1>
                     <p className="text-xs text-gray-500">Jl. Contoh Alamat No. 123, Jakarta Pusat</p>

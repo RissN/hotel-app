@@ -28,13 +28,13 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 from-slate-900 to-slate-800 bg-gradient-to-br">
-            <div className="max-w-md w-full my-10 mx-auto px-6 py-8 bg-white/95 backdrop-blur-xl shadow-2xl rounded-2xl border border-white/20 transform transition-all duration-300">
+        <div className="min-h-screen flex items-center justify-center bg-slate-900">
+            <div className="max-w-md w-full my-10 mx-auto px-6 py-8 bg-white shadow-2xl rounded-3xl border border-slate-700 transform transition-all duration-300">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-                        Hotel Admin Login
+                    <h2 className="text-3xl font-extrabold text-slate-900 drop-shadow-sm">
+                        Hotel Staff Login
                     </h2>
-                    <p className="text-slate-500 mt-2">Masuk ke sistem reservasi hotel</p>
+                    <p className="text-slate-500 mt-2 font-medium">Masuk ke sistem reservasi hotel</p>
                 </div>
 
                 {error && (
