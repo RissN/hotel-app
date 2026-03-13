@@ -1,128 +1,177 @@
 # 🏨 PPKD Hotel — Reservation System
 
-Aplikasi web untuk manajemen registrasi tamu dan pembuatan invoice reservasi hotel PPKD.
+Sebuah aplikasi web modern (berbasis React dan Supabase) untuk manajemen registrasi tamu, autentikasi berbasis role (Admin, Superadmin, Resepsionis), dan pembuatan invoice reservasi (A4 Print-ready).
 
 ---
 
-## 🚀 Menjalankan Aplikasi
+## 🚀 Fitur Utama
 
-```bash
-npm install
-npm run dev
-```
-
-Buka `http://localhost:5173` di browser.
-
----
-
-## 📋 Modul Penggunaan
-
-### Alur Kerja
-
-```
-[Form Registrasi] → [Pembayaran] → [Invoice / Konfirmasi]
-       /                /payment          /confirmation
-```
-
----
-
-### Langkah 1 — Formulir Registrasi (`/`)
-
-Isi data tamu melalui 4 bagian:
-
-#### 🛏 Informasi Kamar
-| Field | Wajib | Keterangan |
-|---|---|---|
-| Room No. | — | Nomor kamar, contoh: `0601` |
-| No. of Room | — | Jumlah kamar yang dipesan |
-| No. of Person | — | Jumlah tamu |
-| Room Type | — | Standard / Deluxe / Suite |
-| Receptionist | — | Nama resepsionis bertugas |
-
-#### 👤 Data Tamu
-| Field | Wajib | Keterangan |
-|---|---|---|
-| Nama / Name | ✅ | Nama lengkap sesuai KTP/Passport |
-| Pekerjaan, Perusahaan | — | Opsional |
-| No. KTP / Passport | — | Nomor identitas |
-| Kebangsaan, Tgl Lahir | — | Opsional |
-| Alamat, Telepon, Email | — | Opsional |
-| No. Member | — | Kartu keanggotaan jika ada |
-
-#### 📅 Tanggal Menginap
-| Field | Wajib | Keterangan |
-|---|---|---|
-| Arrival Time | — | Jam kedatangan |
-| Arrival Date | ✅ | Tanggal check-in |
-| Departure Date | ✅ | Tanggal check-out |
-
-> Total malam dihitung otomatis dari selisih Arrival & Departure Date.
-
-#### 🔒 Safety Deposit Box
-Isi nomor kotak, nama penerbit, dan tanggal jika diperlukan.
-
-Klik **`Submit & Generate Invoice →`** untuk lanjut ke pembayaran.
-
----
-
-### Langkah 2 — Pembayaran (`/payment`)
-
-Halaman ini menampilkan ringkasan booking dan kalkulasi biaya secara otomatis.
-
-#### 💰 Harga Kamar Per Malam
-| Tipe | Harga |
-|---|---|
-| Standard | Rp 1.500.000 |
-| Deluxe | Rp 2.500.000 |
-| Suite | Rp 4.000.000 |
-
-#### 🧮 Kalkulasi Biaya
-- **Subtotal** = Harga/malam × Jumlah Kamar × Jumlah Malam
-- **PPN** = 11% dari subtotal
-- **Service Charge** = 5% dari subtotal
-- **Grand Total** = Subtotal + PPN + Service Charge
-
-#### 💳 Metode Pembayaran
-| Metode | Keterangan |
-|---|---|
-| **Cash** | Bayar tunai saat check-in |
-| **Bank Transfer** | Transfer ke rekening Mandiri PPKD Hotel, isi nomor referensi opsional |
-| **Kartu Kredit** | Isi nomor kartu, nama pemegang, dan expired date |
-
-Klik **`Konfirmasi Pembayaran →`** untuk menuju invoice.
-
----
-
-### Langkah 3 — Invoice / Konfirmasi (`/confirmation`)
-
-Dokumen konfirmasi resmi berisi:
-- Data tamu & booking (nomor booking di-generate otomatis)
-- Detail kamar dan tanggal menginap
-- **Tabel Rincian Biaya** — subtotal, PPN, service charge, dan Grand Total
-- Metode pembayaran yang dipilih
-- Kebijakan pembatalan hotel
-- Kolom tanda tangan *Authorized Signature*
-
-#### 🖨 Mencetak Invoice
-Klik tombol **`Print Confirmation`** (hijau, kanan atas). Gunakan:
-- Ukuran kertas: **A4**, orientasi **Portrait**
-- Atau pilih **"Save as PDF"** untuk menyimpan
-
-> ⚠️ **Perhatian:** Data tidak tersimpan ke database. Jangan tutup/refresh halaman konfirmasi sebelum mencetak.
-
----
-
-## 📌 Kebijakan Hotel
-
-1. Check-in: **14.00** | Check-out: **12.00**
-2. Reservasi tanpa jaminan dibatalkan otomatis pukul **18.00**
-3. Reservasi bergaransi yang tidak dibatalkan sebelum hari kedatangan dikenakan biaya **1 malam**
+- **Sistem Autentikasi & Role-Based Access Control (RBAC):** Memisahkan hak akses antara `Resepsionis`, `Admin`, dan `Superadmin`.
+- **Manajemen Pengguna (User Management):** Superadmin dapat menambah, mengedit role, dan menghapus akun staf.
+- **Form Reservasi Dinamis:** Pengisian data tamu, kamar, dan periode menginap secara detail dilengkapi validasi.
+- **Sistem Pembayaran Terpadu:** Kalkulasi otomatis untuk harga kamar (berdasarkan tipe kamar), PPN (11%), dan Service Charge (5%).
+- **Cetak Konfirmasi (Print-Ready A4):** Halaman konfirmasi dirancang khusus dengan Tailwind CSS `@media print` agar pas persis untuk dicetak pada kertas A4 tanpa margin berlebih.
+- **UI/UX Premium:** Dilengkapi dengan *animated background gradients*, transisi halus, dan komponen `CustomAlert` untuk notifikasi dan konfirmasi tindakan yang merusak (seperti hapus user).
 
 ---
 
 ## 🛠 Tech Stack
 
-- [React](https://react.dev/) + [Vite](https://vite.dev/)
-- [Tailwind CSS v4](https://tailwindcss.com/)
-- [React Router DOM](https://reactrouter.com/)
-- Deploy: [Vercel](https://vercel.com/)
+- **Frontend:** [React](https://react.dev/) + [Vite](https://vite.dev/)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
+- **Routing:** [React Router DOM](https://reactrouter.com/)
+- **Backend & Database:** [Supabase](https://supabase.com/) (PostgreSQL & Supabase Auth)
+- **Deployment:** [Vercel](https://vercel.com/) (Dianjurkan)
+
+---
+
+## 📋 Alur Kerja (Work Flow)
+
+```mermaid
+graph TD;
+    A[Login] --> B{Role?};
+    
+    B -- Superadmin --> C[Dashboard Superadmin];
+    C --> D[Manajemen Akun];
+    C --> E[Manajemen Reservasi];
+
+    B -- Admin --> F[Dashboard Admin];
+    F --> E[Manajemen Reservasi];
+
+    B -- Resepsionis --> G[Dashboard Resepsionis];
+    G --> H[Buat Reservasi Baru];
+
+    H[Form Registrasi] --> I[Halaman Pembayaran & Kalkulasi];
+    I --> J[Halaman Konfirmasi & Cetak Invoice];
+```
+
+---
+
+## 🚀 Cara Instalasi & Setup
+
+### 1. Clone & Install Dependencies
+```bash
+git clone https://github.com/RissN/hotel-app.git
+cd hotel-app
+npm install
+```
+
+### 2. Setup Supabase
+Aplikasi ini membutuhkan Supabase untuk Auth dan Database.
+
+1. Buat project baru di [Supabase](https://supabase.com).
+2. Dapatkan `Project URL` dan `API Key (anon/public)`.
+3. Buat file `.env` di folder root project:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+### 3. Setup Database (SQL Migrations)
+Jalankan script SQL berikut di menu **SQL Editor** pada dashboard Supabase untuk menyiapkan tabel dan fungsi yang diperlukan:
+
+1. **Jalankan script pembuatan tabel & trigger** yang ada di panduan Supabase Setup awal Anda (untuk `user_roles`, `identities`, dll).
+2. **Jalankan Fungsi Manajemen User** (Untuk digunakan oleh Superadmin di menu Manajemen Akun):
+
+```sql
+-- Fungsi untuk menambahkan user baru dengan role
+CREATE OR REPLACE FUNCTION create_user_by_admin(email text, password text, assign_role text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  new_user_id uuid;
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('Admin', 'Superadmin')) THEN
+    RAISE EXCEPTION 'Unauthorized';
+  END IF;
+
+  new_user_id := gen_random_uuid();
+  -- Insert to auth (Requires elevated privileges securely handled by trigger/RPC)
+  INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
+  VALUES (new_user_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', email, crypt(password, gen_salt('bf')), now(), now(), now());
+
+  INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+  VALUES (new_user_id, new_user_id, format('{"sub":"%s","email":"%s"}', new_user_id::text, email)::jsonb, 'email', new_user_id::text, now(), now(), now());
+
+  INSERT INTO user_roles (user_id, role) VALUES (new_user_id, assign_role);
+END;
+$$;
+
+-- Fungsi untuk mengedit role user
+CREATE OR REPLACE FUNCTION update_user_role_by_admin(target_user_id uuid, new_role text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('Admin', 'Superadmin')) THEN
+    RAISE EXCEPTION 'Unauthorized';
+  END IF;
+  UPDATE user_roles SET role = new_role WHERE user_id = target_user_id;
+END;
+$$;
+
+-- Fungsi menghapus user
+CREATE OR REPLACE FUNCTION delete_user_by_admin(target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('Admin', 'Superadmin')) THEN
+    RAISE EXCEPTION 'Unauthorized';
+  END IF;
+  DELETE FROM auth.users WHERE id = target_user_id;
+END;
+$$;
+```
+
+### 4. Jalankan Aplikasi
+```bash
+npm run dev
+```
+Buka `http://localhost:5173` di browser.
+
+---
+
+## 📖 Panduan Penggunaan Modul
+
+### 1. Halaman Login (`/login`)
+Silakan masuk menggunakan email dan password yang terdaftar di Supabase. Sistem otomatis mendeteksi role Anda (Resepsionis, Admin, atau Superadmin) dan meneruskan Anda ke dashboard yang sesuai.
+
+### 2. Manajemen Akun (Khusus Superadmin)
+Diakses melalui menu "Manajemen Akun" pada dashboard Superadmin.
+- **Tambah User:** Superadmin dapat menambahkan email, password, dan memilih role.
+- **Edit User:** Mengubah role staf (kecuali sesama Superadmin).
+- **Hapus User:** Menghapus akun dari sistem (ditandai dengan popup konfirmasi pengamanan).
+
+### 3. Formulir Reservasi (`/registration`)
+Diakses melalui menu Dashboard (khususnya Resepsionis). Formulir mencakup:
+- **Informasi Kamar:** Nomor, Jumlah, Tipe, Resepsionis.
+- **Data Tamu:** Nama sesuai KTP, No. Identitas, Perusahaan.
+- **Tanggal:** Arrival Date & Departure Date (otomatis menghitung per malam).
+
+Klik **`Submit & Checkout`** untuk menuju pembayaran.
+
+### 4. Halaman Pembayaran (`/payment`)
+- Otomatis menghitung: `Harga Kamar × Total Malam × Jumlah Kamar`.
+- Menambahkan **PPN 11%** dan **Service Charge 5%**.
+- Terdapat metode pembayaran: tunai, transfer bank, dan kartu kredit.
+
+Klik **`Bayar & Cetak Struk`** untuk menuju konfirmasi cetak.
+
+### 5. Invoice & Konfirmasi (`/confirmation`)
+- Halaman ini menampilkan bukti reservasi resmi.
+- **Untuk Mencetak:** Klik tombol **`Print Confirmation`** warna hijau di sudut kanan.
+- Pastikan pengaturan printer browser Anda berada di ukuran **A4 Portrait** (tidak perlu mengatur margin karena sistem sudah otomatis).
+
+---
+
+## 📌 Kebijakan Hotel PPKD
+
+1. Waktu Check-in: **14.00 PM**
+2. Waktu Check-out: **12.00 PM**
+3. Reservasi **tanpa jaminan** dibatalkan otomatis pada pukul **18.00**.
+4. Pembatalan reservasi **bergaransi** setelah hari kedatangan akan dikenakan biaya penalty sebesar harga **1 malam**.
