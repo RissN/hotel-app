@@ -126,6 +126,52 @@ BEGIN
   DELETE FROM auth.users WHERE id = target_user_id;
 END;
 $$;
+
+-- Fungsi untuk mendapatkan daftar user beserta email (Hanya untuk Admin/Superadmin)
+CREATE OR REPLACE FUNCTION get_users_detailed_by_admin()
+RETURNS TABLE (user_id uuid, role text, email text, created_at timestamp with time zone)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = auth.uid() AND ur.role IN ('Admin', 'Superadmin')) THEN
+    RAISE EXCEPTION 'Unauthorized';
+  END IF;
+
+  RETURN QUERY
+  SELECT ur.user_id, ur.role::text, au.email::text, ur.created_at
+  FROM user_roles ur
+  JOIN auth.users au ON au.id = ur.user_id
+  ORDER BY ur.created_at DESC;
+END;
+$$;
+
+-- Fungsi untuk edit role, email, dan password user
+CREATE OR REPLACE FUNCTION update_user_full_by_admin(target_user_id uuid, new_role text, new_email text, new_password text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('Admin', 'Superadmin')) THEN
+    RAISE EXCEPTION 'Unauthorized';
+  END IF;
+  
+  -- Update role
+  UPDATE user_roles SET role = new_role::user_role WHERE user_id = target_user_id;
+  
+  -- Update email if provided
+  IF new_email IS NOT NULL AND new_email != '' THEN
+     UPDATE auth.users SET email = new_email WHERE id = target_user_id;
+     UPDATE auth.identities SET identity_data = jsonb_set(identity_data, '{email}', to_jsonb(new_email)) WHERE user_id = target_user_id;
+  END IF;
+  
+  -- Update password if provided
+  IF new_password IS NOT NULL AND new_password != '' THEN
+     UPDATE auth.users SET encrypted_password = crypt(new_password, gen_salt('bf')) WHERE id = target_user_id;
+  END IF;
+END;
+$$;
 ```
 
 ### 4. Jalankan Aplikasi

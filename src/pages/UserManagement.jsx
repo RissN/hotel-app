@@ -25,6 +25,8 @@ const UserManagement = () => {
     // Edit state
     const [editingUserId, setEditingUserId] = useState(null);
     const [editRoleValue, setEditRoleValue] = useState('');
+    const [editEmailValue, setEditEmailValue] = useState('');
+    const [editPasswordValue, setEditPasswordValue] = useState('');
     const [isActionLoading, setIsActionLoading] = useState(false);
 
     useEffect(() => {
@@ -33,23 +35,30 @@ const UserManagement = () => {
 
     const fetchUsers = async () => {
         setLoading(true);
-        // We typically cannot freely query `auth.users` directly from the client side easily without a secure backend function 
-        // due to Supabase security. 
-        // However, we CAN query `public.user_roles` if the RLS allows Admin/Superadmin to read it.
-        // For a full implementation, Supabase Edge Functions or a custom Postgres function is recommended to list users.
-        // Assuming we join `user_roles` with a view or simply show standard info:
+        setError(null);
         
         try {
-            const { data, error } = await supabase
-                .from('user_roles')
-                .select('*')
-                .order('created_at', { ascending: false });
+            // Coba fetch menggunakan RPC baru yang meng-join auth.users untuk mendapatkan email
+            const { data: detailedData, error: rpcError } = await supabase.rpc('get_users_detailed_by_admin');
+            
+            if (!rpcError && detailedData) {
+                console.log("Fetched detailed users:", detailedData);
+                setUsers(detailedData);
+            } else {
+                // Jika error (misal fungsi RPC belum dibuat di Supabase), fallback ke query user_roles biasa
+                console.warn("Mencoba fallback karena get_users_detailed_by_admin mungkin belum ada:", rpcError?.message);
+                const { data: fallbackData, error: fallbackError } = await supabase
+                    .from('user_roles')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            console.log("Fetched users:", data);
-            setUsers(data);
+                if (fallbackError) throw fallbackError;
+                console.log("Fetched user roles (fallback):", fallbackData);
+                setUsers(fallbackData || []);
+            }
         } catch (err) {
-            setError(err.message);
+            console.error("Fetch users error:", err);
+            setError("Gagal memuat daftar pengguna. Pastikan RLS Supabase dikonfigurasi.");
         } finally {
             setLoading(false);
         }
@@ -147,19 +156,41 @@ const UserManagement = () => {
     const handleEditClick = (user) => {
         setEditingUserId(user.user_id);
         setEditRoleValue(user.role);
+        setEditEmailValue(user.email || ''); // Assuming user object has email joined, if not it will be blank
+        setEditPasswordValue(''); // Keep blank for security, only update if typed
     };
 
     const handleCancelEdit = () => {
         setEditingUserId(null);
         setEditRoleValue('');
+        setEditEmailValue('');
+        setEditPasswordValue('');
     };
 
     const handleSaveEdit = async (userId) => {
         setIsActionLoading(true);
         try {
-            const { error: rpcError } = await supabase.rpc('update_user_role_by_admin', {
+            // Note: A new RPC `update_user_full_by_admin` needs to be added in Supabase to update email/password:
+            /*
+            CREATE OR REPLACE FUNCTION update_user_full_by_admin(target_user_id uuid, new_role text, new_email text, new_password text)
+            RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('Admin', 'Superadmin')) THEN RAISE EXCEPTION 'Unauthorized'; END IF;
+              UPDATE user_roles SET role = new_role WHERE user_id = target_user_id;
+              IF new_email IS NOT NULL AND new_email != '' THEN
+                 UPDATE auth.users SET email = new_email WHERE id = target_user_id;
+                 UPDATE auth.identities SET identity_data = jsonb_set(identity_data, '{email}', to_jsonb(new_email)) WHERE user_id = target_user_id;
+              END IF;
+              IF new_password IS NOT NULL AND new_password != '' THEN
+                 UPDATE auth.users SET encrypted_password = crypt(new_password, gen_salt('bf')) WHERE id = target_user_id;
+              END IF;
+            END; $$;
+            */
+            const { error: rpcError } = await supabase.rpc('update_user_full_by_admin', {
                 target_user_id: userId,
-                new_role: editRoleValue
+                new_role: editRoleValue,
+                new_email: editEmailValue || null,
+                new_password: editPasswordValue || null
             });
 
             if (rpcError) throw rpcError;
@@ -255,7 +286,7 @@ const UserManagement = () => {
                         <table className="w-full">
                             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
                                 <tr>
-                                    <th className="px-6 py-4 text-left font-medium">User ID</th>
+                                    <th className="px-6 py-4 text-left font-medium">Data Pengguna</th>
                                     <th className="px-6 py-4 text-left font-medium">Role</th>
                                     <th className="px-6 py-4 text-left font-medium">Dibuat Pada</th>
                                     <th className="px-6 py-4 text-right font-medium">Aksi</th>
@@ -272,7 +303,26 @@ const UserManagement = () => {
                                     users.map((u) => (
                                         <tr key={u.user_id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-6 py-4 text-sm font-mono text-slate-600 truncate max-w-[200px]" title={u.user_id}>
-                                                {u.user_id}
+                                                {editingUserId === u.user_id ? (
+                                                    <div className="space-y-2">
+                                                        <input 
+                                                            type="email" 
+                                                            placeholder="Email" 
+                                                            value={editEmailValue} 
+                                                            onChange={(e) => setEditEmailValue(e.target.value)} 
+                                                            className="w-full px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-sans" 
+                                                        />
+                                                        <input 
+                                                            type="password" 
+                                                            placeholder="Password Baru (Kosongkan jika tidak diubah)" 
+                                                            value={editPasswordValue} 
+                                                            onChange={(e) => setEditPasswordValue(e.target.value)} 
+                                                            className="w-full px-3 py-1 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-sans" 
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <span>{u.email || u.user_id}</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {editingUserId === u.user_id ? (
