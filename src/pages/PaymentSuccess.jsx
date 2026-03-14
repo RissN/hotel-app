@@ -11,6 +11,27 @@ const PAYMENT_METHOD_LABEL = {
     ewallet: 'E-Wallet',
 };
 
+const parsePaymentRef = (refStr, method) => {
+    if (!refStr) return { code: '-' };
+    if (refStr.startsWith('JSON:')) {
+        try { 
+            const parsed = JSON.parse(refStr.substring(5)); 
+            parsed.code = parsed.paymentCode || '-';
+            return parsed;
+        } catch (e) { return { code: refStr }; }
+    }
+    // Backward compatibility for old print layouts
+    if (method === 'credit_card' && refStr.startsWith('CC|')) {
+        const parts = refStr.split('|');
+        return { code: '-', cardNumber: parts[1], cardHolder: parts[2], cardExpiry: parts[3] };
+    }
+    if (method === 'ewallet' && refStr.includes(' - ')) {
+        const parts = refStr.split(' - ');
+        return { code: '-', ewalletProvider: parts[0], ewalletPhone: parts[1] };
+    }
+    return { code: refStr, bankRef: refStr }; // old transfer
+};
+
 export default function PaymentSuccess() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -36,6 +57,24 @@ export default function PaymentSuccess() {
     const handlePrint = () => {
         window.print();
     };
+
+    const pData = useMemo(() => {
+        // Fallback for PaymentSuccess if the user navigated immediately:
+        // Inside PaymentPage, `paymentData` is passed directly in location.state
+        // If there's `paymentCode` already there, use it directly alongside the data.
+        if (paymentData?.paymentCode) {
+            return {
+                code: paymentData.paymentCode,
+                cardNumber: paymentData.cardNumber,
+                cardHolder: paymentData.cardHolder,
+                cardExpiry: paymentData.cardExpiry,
+                bankRef: paymentData.bankRef,
+                ewalletProvider: paymentData.ewalletProvider,
+                ewalletPhone: paymentData.ewalletPhone,
+            };
+        }
+        return parsePaymentRef(paymentData?.paymentRef, paymentData?.method);
+    }, [paymentData]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 animate-gradient print:bg-white print:min-h-0">
@@ -188,43 +227,46 @@ export default function PaymentSuccess() {
                     <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm print:text-[9px]">
                         <p className="font-bold text-[11px] text-gray-900 mb-2 print:text-[10px]">💳 Pembayaran via Kartu Kredit</p>
                         <div className="space-y-1">
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Number</span><span className="font-semibold">: {paymentData.cardNumber || (paymentData.paymentRef?.startsWith('CC|') ? paymentData.paymentRef.split('|')[1] : '-')}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Holder</span><span className="font-semibold">: {paymentData.cardHolder || (paymentData.paymentRef?.startsWith('CC|') ? paymentData.paymentRef.split('|')[2] : '-')}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Expired</span><span className="font-semibold">: {paymentData.cardExpiry || (paymentData.paymentRef?.startsWith('CC|') ? paymentData.paymentRef.split('|')[3] : '-')}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Ref. Pembayaran</span><span className="font-bold text-gray-900">: {pData.code || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Number</span><span className="font-semibold">: {pData.cardNumber || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Holder</span><span className="font-semibold">: {pData.cardHolder || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Expired</span><span className="font-semibold">: {pData.cardExpiry || '-'}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || 0)}</span></div>
                         </div>
                     </div>
                 )}
 
                 {paymentData?.method === 'transfer' && (
-                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
-                        <p className="font-bold text-[11px] text-gray-900 mb-2">🏦 Pembayaran via Bank Transfer</p>
+                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm print:text-[9px]">
+                        <p className="font-bold text-[11px] text-gray-900 mb-2 print:text-[10px]">🏦 Pembayaran via Bank Transfer</p>
                         <div className="space-y-1">
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Ref. Pembayaran</span><span className="font-bold text-gray-900">: {pData.code || '-'}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Bank</span><span className="font-semibold">: Bank Mandiri (Cab. Jakarta)</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. Rekening</span><span className="font-semibold">: 123-00-9876543-2</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Atas Nama</span><span className="font-semibold">: PPKD HOTEL JAKARTA PUSAT</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Transfer</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || 0)}</span></div>
-                            {paymentData?.bankRef && (
-                                <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. Referensi</span><span className="font-semibold">: {paymentData.bankRef}</span></div>
+                            {pData.bankRef && pData.bankRef !== pData.code && (
+                                <div className="flex"><span className="w-36 text-gray-500 shrink-0">Berita Acara</span><span className="font-semibold">: {pData.bankRef}</span></div>
                             )}
                         </div>
                     </div>
                 )}
 
                 {paymentData?.method === 'ewallet' && (
-                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
-                        <p className="font-bold text-[11px] text-gray-900 mb-2">📱 Pembayaran via E-Wallet</p>
+                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm print:text-[9px]">
+                        <p className="font-bold text-[11px] text-gray-900 mb-2 print:text-[10px]">📱 Pembayaran via E-Wallet</p>
                         <div className="space-y-1">
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Provider</span><span className="font-semibold">: {paymentData.ewalletProvider ? paymentData.ewalletProvider.toUpperCase() : '-'}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. HP / E-Wallet</span><span className="font-semibold">: {paymentData.ewalletPhone || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Ref. Pembayaran</span><span className="font-bold text-gray-900">: {pData.code || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Provider</span><span className="font-semibold">: {(pData.ewalletProvider || '-').toUpperCase()}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. HP / E-Wallet</span><span className="font-semibold">: {pData.ewalletPhone || '-'}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || 0)}</span></div>
                         </div>
                     </div>
                 )}
 
                 {paymentData?.method === 'cash' && (
-                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
-                        <p className="font-bold text-[11px] text-gray-900 mb-2">💵 Pembayaran Tunai (Cash)</p>
+                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm print:text-[9px]">
+                        <p className="font-bold text-[11px] text-gray-900 mb-2 print:text-[10px]">💵 Pembayaran Tunai (Cash)</p>
                         <div className="space-y-1">
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Metode</span><span className="font-semibold">: Dibayar tunai saat check-in</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || 0)}</span></div>

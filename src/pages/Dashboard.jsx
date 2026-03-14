@@ -17,6 +17,27 @@ const PAYMENT_METHOD_LABEL = {
     ewallet: 'E-Wallet',
 };
 
+const parsePaymentRef = (refStr, method) => {
+    if (!refStr) return { code: '-' };
+    if (refStr.startsWith('JSON:')) {
+        try { 
+            const parsed = JSON.parse(refStr.substring(5)); 
+            parsed.code = parsed.paymentCode || '-';
+            return parsed;
+        } catch (e) { return { code: refStr }; }
+    }
+    // Backward compatibility for old print layouts
+    if (method === 'credit_card' && refStr.startsWith('CC|')) {
+        const parts = refStr.split('|');
+        return { code: '-', cardNumber: parts[1], cardHolder: parts[2], cardExpiry: parts[3] };
+    }
+    if (method === 'ewallet' && refStr.includes(' - ')) {
+        const parts = refStr.split(' - ');
+        return { code: '-', ewalletProvider: parts[0], ewalletPhone: parts[1] };
+    }
+    return { code: refStr, bankRef: refStr }; // old transfer
+};
+
 // ─── Print helper ──────────────────────────────────────────────────────────────
 function buildConfirmationHTML(tx) {
     const fmt = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
@@ -156,36 +177,40 @@ function buildConfirmationHTML(tx) {
 
   <!-- Payment Method Section -->
   ${(() => {
+    const pData = parsePaymentRef(tx.payment_ref, tx.payment_method);
     if (tx.payment_method === 'credit_card') {
-      const ccParts = (tx.payment_ref || '').split('|');
-      const ccNumber = ccParts[1] || '-';
-      const ccHolder = ccParts[2] || '-';
-      const ccExpiry = ccParts[3] || '-';
-      return `<div class="pay-info-box">
+      return `
+  <div class="pay-info-box">
     <p class="pay-info-title">💳 Pembayaran via Kartu Kredit</p>
-    <div class="pay-info-row"><span class="pi-lbl">Card Number</span><span class="pi-val">: ${ccNumber}</span></div>
-    <div class="pay-info-row"><span class="pi-lbl">Card Holder</span><span class="pi-val">: ${ccHolder}</span></div>
-    <div class="pay-info-row"><span class="pi-lbl">Expired</span><span class="pi-val">: ${ccExpiry}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Ref. Pembayaran</span><span class="pi-val">: <strong style="font-size:12px;">${pData.code || '-'}</strong></span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Card Number</span><span class="pi-val">: ${pData.cardNumber || '-'}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Card Holder</span><span class="pi-val">: ${pData.cardHolder || '-'}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Expired</span><span class="pi-val">: ${pData.cardExpiry || '-'}</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Jumlah Pembayaran</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
   </div>`;
     } else if (tx.payment_method === 'transfer') {
-      return `<div class="pay-info-box">
+      return `
+  <div class="pay-info-box">
     <p class="pay-info-title">🏦 Pembayaran via Bank Transfer</p>
+    <div class="pay-info-row"><span class="pi-lbl">Ref. Pembayaran</span><span class="pi-val">: <strong style="font-size:12px;">${pData.code || '-'}</strong></span></div>
     <div class="pay-info-row"><span class="pi-lbl">Bank</span><span class="pi-val">: Bank Mandiri (Cab. Jakarta)</span></div>
     <div class="pay-info-row"><span class="pi-lbl">No. Rekening</span><span class="pi-val">: 123-00-9876543-2</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Atas Nama</span><span class="pi-val">: PPKD HOTEL JAKARTA PUSAT</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Jumlah Transfer</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
-    ${tx.payment_ref ? `<div class="pay-info-row"><span class="pi-lbl">No. Referensi</span><span class="pi-val">: ${tx.payment_ref}</span></div>` : ''}
+    ${pData.bankRef && pData.bankRef !== pData.code ? `<div class="pay-info-row"><span class="pi-lbl">Berita Acara</span><span class="pi-val">: ${pData.bankRef}</span></div>` : ''}
   </div>`;
     } else if (tx.payment_method === 'ewallet') {
-      return `<div class="pay-info-box">
+      return `
+  <div class="pay-info-box">
     <p class="pay-info-title">📱 Pembayaran via E-Wallet</p>
-    <div class="pay-info-row"><span class="pi-lbl">Provider</span><span class="pi-val">: ${tx.payment_ref ? tx.payment_ref.split(' - ')[0] : '-'}</span></div>
-    <div class="pay-info-row"><span class="pi-lbl">No. HP / E-Wallet</span><span class="pi-val">: ${tx.payment_ref ? tx.payment_ref.split(' - ')[1] || '-' : '-'}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Ref. Pembayaran</span><span class="pi-val">: <strong style="font-size:12px;">${pData.code || '-'}</strong></span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Provider</span><span class="pi-val">: ${(pData.ewalletProvider || '-').toUpperCase()}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">No. HP / E-Wallet</span><span class="pi-val">: ${pData.ewalletPhone || '-'}</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Jumlah Pembayaran</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
   </div>`;
     } else {
-      return `<div class="pay-info-box">
+      return `
+  <div class="pay-info-box">
     <p class="pay-info-title">💵 Pembayaran Tunai (Cash)</p>
     <div class="pay-info-row"><span class="pi-lbl">Metode</span><span class="pi-val">: Dibayar tunai saat check-in</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Jumlah Pembayaran</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
@@ -312,11 +337,27 @@ function DetailModal({ activity, onClose, onPrint }) {
                         <div className="bg-purple-50 rounded-2xl p-4 text-sm">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-3">
                                 <div><span className="text-slate-500 block text-xs">Metode Pembayaran</span><span className="font-bold text-slate-800">{payLabel}</span></div>
-                                {activity.payment_ref && <div><span className="text-slate-500 block text-xs">Ref. Pembayaran</span><span className="font-medium text-slate-800">{activity.payment_ref}</span></div>}
                                 <div><span className="text-slate-500 block text-xs">Harga per Malam</span><span className="font-medium text-slate-800">{formatIDR(activity.room_rate)}</span></div>
+                                {activity.payment_ref && (() => {
+                                    const pData = parsePaymentRef(activity.payment_ref, activity.payment_method);
+                                    return (
+                                        <div className="col-span-2 mt-1">
+                                            <span className="text-slate-500 block text-xs">Referensi Pembayaran</span>
+                                            <span className="font-medium text-slate-800 break-all">
+                                                Ref: {pData.code || '-'}
+                                            </span>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                             <div className="border-t border-purple-100 pt-3 space-y-1.5">
-                                <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{formatIDR(activity.subtotal)}</span></div>
+                                <div className="flex justify-between items-center text-gray-600">
+                                    <div className="flex flex-col">
+                                        <span>Subtotal</span>
+                                        <span className="text-[10px] text-gray-400">({formatIDR(activity.room_rate)} &times; {activity.number_of_rooms || 1} kamar &times; {activity.total_nights || 1} malam)</span>
+                                    </div>
+                                    <span className="font-medium">{formatIDR(activity.subtotal)}</span>
+                                </div>
                                 <div className="flex justify-between text-gray-500 text-xs"><span>PPN 11%</span><span>{formatIDR(activity.tax)}</span></div>
                                 <div className="flex justify-between text-gray-500 text-xs"><span>Service Charge 5%</span><span>{formatIDR(activity.service_charge)}</span></div>
                                 <div className="flex justify-between font-bold text-base border-t border-purple-200 pt-2 mt-1">

@@ -8,6 +8,28 @@ const PAYMENT_METHOD_LABEL = {
     cash: 'Cash / Tunai',
     transfer: 'Bank Transfer (Mandiri)',
     credit_card: 'Kartu Kredit',
+    ewallet: 'E-Wallet',
+};
+
+const parsePaymentRef = (refStr, method) => {
+    if (!refStr) return { code: '-' };
+    if (refStr.startsWith('JSON:')) {
+        try { 
+            const parsed = JSON.parse(refStr.substring(5)); 
+            parsed.code = parsed.paymentCode || '-';
+            return parsed;
+        } catch (e) { return { code: refStr }; }
+    }
+    // Backward compatibility for old print layouts
+    if (method === 'credit_card' && refStr.startsWith('CC|')) {
+        const parts = refStr.split('|');
+        return { code: '-', cardNumber: parts[1], cardHolder: parts[2], cardExpiry: parts[3] };
+    }
+    if (method === 'ewallet' && refStr.includes(' - ')) {
+        const parts = refStr.split(' - ');
+        return { code: '-', ewalletProvider: parts[0], ewalletPhone: parts[1] };
+    }
+    return { code: refStr, bankRef: refStr }; // old transfer
 };
 
 export default function ReservationConfirmation() {
@@ -35,6 +57,17 @@ export default function ReservationConfirmation() {
     const handlePrint = () => {
         window.print();
     };
+
+    const numRooms = parseInt(reservationData.numberOfRoom) || 1;
+    const roomRate = parseInt(reservationData.roomRate) || (reservationData.roomType === 'Deluxe Room' ? 2500000 : 1500000);
+    const subtotal = roomRate * numRooms * (totalNights === '-' ? 1 : totalNights);
+    const tax = Math.round(subtotal * 0.11);
+    const serviceCharge = Math.round(subtotal * 0.05);
+    const calculatedGrandTotal = subtotal + tax + serviceCharge;
+
+    const pData = useMemo(() => {
+        return parsePaymentRef(paymentData?.paymentRef, paymentData?.method);
+    }, [paymentData]);
 
     return (
         <div className="min-h-screen bg-gray-100 py-8 print:bg-white print:py-0">
@@ -133,10 +166,11 @@ export default function ReservationConfirmation() {
                     <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
                         <p className="font-bold text-[11px] text-gray-900 mb-2">💳 Pembayaran via Kartu Kredit</p>
                         <div className="space-y-1">
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Number</span><span className="font-semibold">: {paymentData.cardNumber || (paymentData.paymentRef?.startsWith('CC|') ? paymentData.paymentRef.split('|')[1] : '-')}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Holder</span><span className="font-semibold">: {paymentData.cardHolder || (paymentData.paymentRef?.startsWith('CC|') ? paymentData.paymentRef.split('|')[2] : '-')}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Expired</span><span className="font-semibold">: {paymentData.cardExpiry || (paymentData.paymentRef?.startsWith('CC|') ? paymentData.paymentRef.split('|')[3] : '-')}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || 0)}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Ref. Pembayaran</span><span className="font-bold text-gray-900">: {pData.code || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Number</span><span className="font-semibold">: {pData.cardNumber || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Holder</span><span className="font-semibold">: {pData.cardHolder || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Expired</span><span className="font-semibold">: {pData.cardExpiry || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || calculatedGrandTotal)}</span></div>
                         </div>
                     </div>
                 )}
@@ -145,12 +179,13 @@ export default function ReservationConfirmation() {
                     <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
                         <p className="font-bold text-[11px] text-gray-900 mb-2">🏦 Pembayaran via Bank Transfer</p>
                         <div className="space-y-1">
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Ref. Pembayaran</span><span className="font-bold text-gray-900">: {pData.code || '-'}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Bank</span><span className="font-semibold">: Bank Mandiri (Cab. Jakarta)</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. Rekening</span><span className="font-semibold">: 123-00-9876543-2</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Atas Nama</span><span className="font-semibold">: PPKD HOTEL JAKARTA PUSAT</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Transfer</span><span className="font-bold text-red-600">: {paymentData ? formatIDR(paymentData.grandTotal || 0) : '-'}</span></div>
-                            {paymentData?.bankRef && (
-                                <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. Referensi</span><span className="font-semibold">: {paymentData.bankRef}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Transfer</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || calculatedGrandTotal)}</span></div>
+                            {pData.bankRef && pData.bankRef !== pData.code && (
+                                <div className="flex"><span className="w-36 text-gray-500 shrink-0">Berita Acara</span><span className="font-semibold">: {pData.bankRef}</span></div>
                             )}
                         </div>
                     </div>
@@ -160,9 +195,10 @@ export default function ReservationConfirmation() {
                     <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
                         <p className="font-bold text-[11px] text-gray-900 mb-2">📱 Pembayaran via E-Wallet</p>
                         <div className="space-y-1">
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Provider</span><span className="font-semibold">: {paymentData.ewalletProvider ? paymentData.ewalletProvider.toUpperCase() : '-'}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. HP / E-Wallet</span><span className="font-semibold">: {paymentData.ewalletPhone || '-'}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || 0)}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Ref. Pembayaran</span><span className="font-bold text-gray-900">: {pData.code || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Provider</span><span className="font-semibold">: {(pData.ewalletProvider || '-').toUpperCase()}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. HP / E-Wallet</span><span className="font-semibold">: {pData.ewalletPhone || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || calculatedGrandTotal)}</span></div>
                         </div>
                     </div>
                 )}

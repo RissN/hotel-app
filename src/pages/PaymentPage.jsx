@@ -57,6 +57,18 @@ export default function PaymentPage() {
         setIsProcessing(true);
         const bookingNo = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
 
+        // Generate Unique Payment Code
+        const randCode = Math.floor(10000 + Math.random() * 90000);
+        let paymentCode = '';
+        if (selectedMethod === 'transfer') {
+            paymentCode = `MANDIRI-${randCode}`;
+        } else if (selectedMethod === 'credit_card') {
+            paymentCode = `CC-${randCode}`;
+        } else if (selectedMethod === 'ewallet') {
+            const prefix = ewalletProvider ? ewalletProvider.substring(0, 2).toUpperCase() : 'EW';
+            paymentCode = `${prefix}-${randCode}`;
+        }
+
         const paymentData = {
             method: selectedMethod,
             roomRate,
@@ -72,6 +84,7 @@ export default function PaymentPage() {
             bankRef: selectedMethod === 'transfer' ? bankRef : '',
             ewalletProvider: selectedMethod === 'ewallet' ? ewalletProvider : '',
             ewalletPhone: selectedMethod === 'ewallet' ? ewalletPhone : '',
+            paymentCode
         };
 
         try {
@@ -94,7 +107,7 @@ export default function PaymentPage() {
                 service_charge: serviceCharge,
                 grand_total: grandTotal,
                 payment_method: selectedMethod,
-                payment_ref: selectedMethod === 'transfer' ? bankRef : (selectedMethod === 'credit_card' ? `CC|${cardNumber}|${cardHolder}|${cardExpiry}` : (selectedMethod === 'ewallet' ? `${ewalletProvider.toUpperCase()} - ${ewalletPhone}` : '')),
+                payment_ref: selectedMethod === 'cash' ? '' : `JSON:${JSON.stringify(paymentData)}`,
                 nationality: reservationData.nationality,
                 company: reservationData.company,
                 receptionist: reservationData.receptionist
