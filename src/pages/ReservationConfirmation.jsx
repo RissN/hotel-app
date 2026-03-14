@@ -128,53 +128,108 @@ export default function ReservationConfirmation() {
                     </div>
                 </div>
 
-                <div className="text-[10px] mb-4">
-                    <p className="mb-2 text-gray-800">Reservation guaranteed by the following credit card:</p>
-
-                    <div className="space-y-2 w-3/4">
-                        <div className="flex items-center">
-                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Number</span>
-                            <span className="mr-2">:</span>
-                            <div className="flex-1 border-b border-gray-500 min-w-0" />
-                        </div>
-                        <div className="flex items-center">
-                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Holder name</span>
-                            <span className="mr-2">:</span>
-                            <div className="flex-1 border-b border-gray-500 min-w-0" />
-                        </div>
-                        <div className="flex items-center">
-                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Type</span>
-                            <span className="mr-2">:</span>
-                            <div className="flex items-center gap-4">
-                                <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Visa</label>
-                                <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Master</label>
-                                <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Amex</label>
+                {/* Dynamic Payment Method Section */}
+                {paymentData?.method === 'credit_card' && (
+                    <div className="text-[10px] mb-4">
+                        <p className="mb-2 text-gray-800">Reservation guaranteed by the following credit card:</p>
+                        <div className="space-y-2 w-3/4">
+                            <div className="flex items-center">
+                                <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Number</span>
+                                <span className="mr-2">:</span>
+                                <div className="flex-1 border-b border-gray-500 min-w-0" />
+                            </div>
+                            <div className="flex items-center">
+                                <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Holder name</span>
+                                <span className="mr-2">:</span>
+                                <div className="flex-1 border-b border-gray-500 min-w-0" />
+                            </div>
+                            <div className="flex items-center">
+                                <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Type</span>
+                                <span className="mr-2">:</span>
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Visa</label>
+                                    <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Master</label>
+                                    <label className="flex items-center gap-1 cursor-not-allowed"><input type="checkbox" disabled className="w-3 h-3 rounded-none" /> Amex</label>
+                                </div>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="w-40 text-red-600 shrink-0 whitespace-nowrap">Expired date/month/year</span>
+                                <span className="mr-2">:</span>
+                                <div className="flex items-center text-gray-500 w-32">
+                                    <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
+                                    <span className="mx-1">/</span>
+                                    <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
+                                    <span className="mx-1">/</span>
+                                    <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex items-center">
-                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Or by Bank Transfer to</span>
+                        <div className="flex items-end mt-4 w-3/4">
+                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card holder signature</span>
                             <span className="mr-2">:</span>
                             <div className="flex-1 border-b border-gray-500 min-w-0" />
                         </div>
-                        <div className="flex items-center">
-                            <span className="w-40 text-red-600 shrink-0 whitespace-nowrap">Expired date/month/year</span>
-                            <span className="mr-2">:</span>
-                            <div className="flex items-center text-gray-500 w-32">
-                                <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
-                                <span className="mx-1">/</span>
-                                <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
-                                <span className="mx-1">/</span>
-                                <span className="flex-1 border-b border-gray-500 inline-block w-full"></span>
-                            </div>
+                    </div>
+                )}
+
+                {paymentData?.method === 'transfer' && (
+                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
+                        <p className="font-bold text-[11px] text-gray-900 mb-2">🏦 Pembayaran via Bank Transfer</p>
+                        <div className="space-y-1">
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Bank</span><span className="font-semibold">: Bank Mandiri (Cab. Jakarta)</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. Rekening</span><span className="font-semibold">: 123-00-9876543-2</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Atas Nama</span><span className="font-semibold">: PPKD HOTEL JAKARTA PUSAT</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Transfer</span><span className="font-bold text-red-600">: {paymentData ? formatIDR(paymentData.grandTotal || 0) : '-'}</span></div>
+                            {paymentData?.bankRef && (
+                                <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. Referensi</span><span className="font-semibold">: {paymentData.bankRef}</span></div>
+                            )}
                         </div>
                     </div>
+                )}
 
-                    <div className="flex items-end mt-4 w-3/4">
-                        <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card holder signature</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex-1 border-b border-gray-500 min-w-0" />
+                {paymentData?.method === 'ewallet' && (
+                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
+                        <p className="font-bold text-[11px] text-gray-900 mb-2">📱 Pembayaran via E-Wallet</p>
+                        <div className="space-y-1">
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Provider</span><span className="font-semibold">: {paymentData.ewalletProvider ? paymentData.ewalletProvider.toUpperCase() : '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. HP / E-Wallet</span><span className="font-semibold">: {paymentData.ewalletPhone || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || 0)}</span></div>
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {paymentData?.method === 'cash' && (
+                    <div className="border border-gray-300 bg-[#f9fafb] px-3 py-2.5 text-[10px] mb-4 rounded-sm">
+                        <p className="font-bold text-[11px] text-gray-900 mb-2">💵 Pembayaran Tunai (Cash)</p>
+                        <div className="space-y-1">
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Metode</span><span className="font-semibold">: Dibayar tunai saat check-in</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || 0)}</span></div>
+                        </div>
+                    </div>
+                )}
+
+                {!paymentData && (
+                    <div className="text-[10px] mb-4">
+                        <p className="mb-2 text-gray-800">Reservation guaranteed by the following credit card:</p>
+                        <div className="space-y-2 w-3/4">
+                            <div className="flex items-center">
+                                <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Number</span>
+                                <span className="mr-2">:</span>
+                                <div className="flex-1 border-b border-gray-500 min-w-0" />
+                            </div>
+                            <div className="flex items-center">
+                                <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card Holder name</span>
+                                <span className="mr-2">:</span>
+                                <div className="flex-1 border-b border-gray-500 min-w-0" />
+                            </div>
+                        </div>
+                        <div className="flex items-end mt-4 w-3/4">
+                            <span className="w-40 text-gray-800 shrink-0 whitespace-nowrap">Card holder signature</span>
+                            <span className="mr-2">:</span>
+                            <div className="flex-1 border-b border-gray-500 min-w-0" />
+                        </div>
+                    </div>
+                )}
 
                 {/* Cancellation Policy */}
                 <div className="bg-[#f2f2f2] px-3 py-2 text-[8px] text-gray-700">

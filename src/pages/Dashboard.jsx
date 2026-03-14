@@ -14,6 +14,7 @@ const PAYMENT_METHOD_LABEL = {
     cash: 'Cash / Tunai',
     transfer: 'Bank Transfer (Mandiri)',
     credit_card: 'Kartu Kredit',
+    ewallet: 'E-Wallet',
 };
 
 // ─── Print helper ──────────────────────────────────────────────────────────────
@@ -82,6 +83,13 @@ function buildConfirmationHTML(tx) {
     .policy-title { font-weight: 700; text-decoration: underline; color: #111; margin-bottom: 3px; }
     .policy ol { margin: 0; padding-left: 14px; }
     .policy li { margin-bottom: 2px; }
+
+    /* Payment info box */
+    .pay-info-box { border: 1px solid #d1d5db; background: #f9fafb; padding: 10px 14px; margin-bottom: 10px; border-radius: 3px; font-size: 10px; }
+    .pay-info-title { font-weight: 700; font-size: 11px; margin-bottom: 8px; color: #1f2937; }
+    .pay-info-row { display: flex; margin-bottom: 4px; }
+    .pay-info-row .pi-lbl { width: 140px; flex-shrink: 0; color: #6b7280; }
+    .pay-info-row .pi-val { font-weight: 600; color: #111; }
   </style>
 </head>
 <body>
@@ -146,7 +154,8 @@ function buildConfirmationHTML(tx) {
     </div>
   </div>
 
-  <!-- Credit Card Section -->
+  <!-- Payment Method Section -->
+  ${tx.payment_method === 'credit_card' ? `
   <div class="cc-section">
     <p class="label">Reservation guaranteed by the following credit card:</p>
     <div class="cc-row"><span class="cc-lbl">Card Number</span><span class="colon">:</span><div class="cc-line"></div></div>
@@ -159,7 +168,6 @@ function buildConfirmationHTML(tx) {
         <label><input type="checkbox" disabled/> Amex</label>
       </div>
     </div>
-    <div class="cc-row"><span class="cc-lbl">Or by Bank Transfer to</span><span class="colon">:</span><div class="cc-line"></div></div>
     <div class="cc-row">
       <span class="cc-lbl red">Expired date/month/year</span><span class="colon">:</span>
       <div class="expire-fields">
@@ -170,6 +178,29 @@ function buildConfirmationHTML(tx) {
     </div>
     <div class="sig-row"><span class="cc-lbl">Card holder signature</span><span class="colon">:</span><div class="cc-line"></div></div>
   </div>
+  ` : tx.payment_method === 'transfer' ? `
+  <div class="pay-info-box">
+    <p class="pay-info-title">🏦 Pembayaran via Bank Transfer</p>
+    <div class="pay-info-row"><span class="pi-lbl">Bank</span><span class="pi-val">: Bank Mandiri (Cab. Jakarta)</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">No. Rekening</span><span class="pi-val">: 123-00-9876543-2</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Atas Nama</span><span class="pi-val">: PPKD HOTEL JAKARTA PUSAT</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Jumlah Transfer</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
+    ${tx.payment_ref ? `<div class="pay-info-row"><span class="pi-lbl">No. Referensi</span><span class="pi-val">: ${tx.payment_ref}</span></div>` : ''}
+  </div>
+  ` : tx.payment_method === 'ewallet' ? `
+  <div class="pay-info-box">
+    <p class="pay-info-title">📱 Pembayaran via E-Wallet</p>
+    <div class="pay-info-row"><span class="pi-lbl">Provider</span><span class="pi-val">: ${tx.payment_ref ? tx.payment_ref.split(' - ')[0] : '-'}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">No. HP / E-Wallet</span><span class="pi-val">: ${tx.payment_ref ? tx.payment_ref.split(' - ')[1] || '-' : '-'}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Jumlah Pembayaran</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
+  </div>
+  ` : `
+  <div class="pay-info-box">
+    <p class="pay-info-title">💵 Pembayaran Tunai (Cash)</p>
+    <div class="pay-info-row"><span class="pi-lbl">Metode</span><span class="pi-val">: Dibayar tunai saat check-in</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Jumlah Pembayaran</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
+  </div>
+  `}
 
   <!-- Cancellation Policy -->
   <div class="policy">
