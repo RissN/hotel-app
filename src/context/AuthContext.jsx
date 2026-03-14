@@ -7,6 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [role, setRole] = useState(null);
+    const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(true);
     
     // Ref to track when an explicit login is in progress.
@@ -58,15 +59,17 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data, error } = await supabase
                 .from('user_roles')
-                .select('role')
+                .select('role, username')
                 .eq('user_id', userId)
                 .maybeSingle();
             
             if (error) {
                 console.error("Error fetching user role:", error.message);
-                setRole(null); 
+                setRole(null);
+                setUsername('');
             } else {
-                setRole(data?.role || null); 
+                setRole(data?.role || null);
+                setUsername(data?.username || '');
             }
         } catch (error) {
             console.error("Unexpected error fetching role:", error);
@@ -113,6 +116,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         role,
+        username,
         loading,
         login,
         logout,

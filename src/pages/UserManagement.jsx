@@ -12,6 +12,7 @@ const UserManagement = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('Resepsionis');
+    const [usernameField, setUsernameField] = useState('');
     const [isCreating, setIsCreating] = useState(false);
 
     // Custom alert state
@@ -28,6 +29,7 @@ const UserManagement = () => {
     const [editRoleValue, setEditRoleValue] = useState('');
     const [editEmailValue, setEditEmailValue] = useState('');
     const [editPasswordValue, setEditPasswordValue] = useState('');
+    const [editUsernameValue, setEditUsernameValue] = useState('');
     const [isActionLoading, setIsActionLoading] = useState(false);
 
     useEffect(() => {
@@ -162,6 +164,7 @@ const UserManagement = () => {
         setEmail('');
         setPassword('');
         setRole('Resepsionis');
+        setUsernameField('');
         setError(null);
         setIsModalOpen(true);
     };
@@ -172,6 +175,7 @@ const UserManagement = () => {
         setEditEmailValue(user.email || '');
         setEditPasswordValue('');
         setEditRoleValue(user.role);
+        setEditUsernameValue(user.username || '');
         setError(null);
         setIsModalOpen(true);
     };
@@ -191,7 +195,8 @@ const UserManagement = () => {
                 const { error: rpcError } = await supabase.rpc('create_user_by_admin', {
                     email: email,
                     password: password,
-                    assign_role: role
+                    assign_role: role,
+                    assign_username: usernameField
                 });
                 if (rpcError) throw rpcError;
                 
@@ -211,7 +216,8 @@ const UserManagement = () => {
                     target_user_id: editingUserId,
                     new_role: editRoleValue,
                     new_email: editEmailValue || null,
-                    new_password: editPasswordValue || null
+                    new_password: editPasswordValue || null,
+                    new_username: editUsernameValue
                 });
                 if (rpcError) throw rpcError;
                 
@@ -332,8 +338,8 @@ const UserManagement = () => {
                                                         {initial}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-sm font-bold text-slate-800 truncate">{displayEmail}</p>
-                                                        <p className="text-xs font-mono text-slate-400 truncate mt-0.5" title={u.user_id}>{u.user_id}</p>
+                                                        <p className="text-sm font-bold text-slate-800 truncate">{u.username || displayEmail}</p>
+                                                        <p className="text-xs text-slate-400 truncate mt-0.5">{displayEmail}</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -447,6 +453,18 @@ const UserManagement = () => {
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Username (Nama Lengkap)</label>
+                                    <input
+                                        type="text"
+                                        value={modalMode === 'add' ? usernameField : editUsernameValue}
+                                        onChange={(e) => modalMode === 'add' ? setUsernameField(e.target.value) : setEditUsernameValue(e.target.value)}
+                                        placeholder="misal: Azizi Faris"
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-slate-800 font-medium"
+                                    />
+                                    <p className="text-xs text-slate-400 mt-1.5">Nama ini akan otomatis muncul di kolom Receptionist pada form registrasi.</p>
                                 </div>
                             </div>
 

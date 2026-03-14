@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function RegistrationForm() {
     const navigate = useNavigate();
+    const { username } = useAuth();
     const [showConfirm, setShowConfirm] = useState(false);
     const [navigating, setNavigating] = useState(false);
     const [formData, setFormData] = useState({
@@ -11,7 +13,7 @@ export default function RegistrationForm() {
         numberOfPerson: '',
         numberOfRoom: '',
         roomType: '',
-        receptionist: '',
+        receptionist: username || '',
         checkOutTime: '12.00 Noon',
         name: '',
         arrivalTime: '',
@@ -164,7 +166,8 @@ export default function RegistrationForm() {
                                     <div className="col-span-2">
                                         <label className={labelClass}>Receptionist</label>
                                         <input type="text" name="receptionist" value={formData.receptionist} onChange={handleChange}
-                                            className={inputClass} />
+                                            readOnly={!!username}
+                                            className={`${inputClass} ${username ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''}`} />
                                     </div>
                                     <div className="col-span-2">
                                         <div className="bg-white border border-blue-200 rounded-lg px-4 py-2 text-center">
