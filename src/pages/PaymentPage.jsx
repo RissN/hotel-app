@@ -94,7 +94,7 @@ export default function PaymentPage() {
                 service_charge: serviceCharge,
                 grand_total: grandTotal,
                 payment_method: selectedMethod,
-                payment_ref: selectedMethod === 'transfer' ? bankRef : (selectedMethod === 'credit_card' ? 'CREDIT_CARD' : (selectedMethod === 'ewallet' ? `${ewalletProvider.toUpperCase()} - ${ewalletPhone}` : '')),
+                payment_ref: selectedMethod === 'transfer' ? bankRef : (selectedMethod === 'credit_card' ? `CC|${cardNumber}|${cardHolder}|${cardExpiry}` : (selectedMethod === 'ewallet' ? `${ewalletProvider.toUpperCase()} - ${ewalletPhone}` : '')),
                 nationality: reservationData.nationality,
                 company: reservationData.company,
                 receptionist: reservationData.receptionist
