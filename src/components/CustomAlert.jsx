@@ -46,7 +46,10 @@ const CustomAlert = ({
         success: {
             icon: (
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <path
+                        strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"
+                        style={{ strokeDasharray: 24, strokeDashoffset: 24, animation: 'drawCheck 0.5s cubic-bezier(0.65, 0, 0.45, 1) 0.2s forwards' }}
+                    />
                 </svg>
             ),
             iconBg: 'bg-emerald-100',
@@ -55,7 +58,7 @@ const CustomAlert = ({
         },
         error: {
             icon: (
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-7 h-7" style={{ animation: 'shakeIcon 0.5s ease-in-out 0.2s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
             ),
@@ -65,7 +68,7 @@ const CustomAlert = ({
         },
         warning: {
             icon: (
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-7 h-7" style={{ animation: 'pulseWarning 2s infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86l-8.5 14.72A1 1 0 002.64 20h18.72a1 1 0 00.85-1.42l-8.5-14.72a1 1 0 00-1.72 0z" />
                 </svg>
             ),
@@ -75,7 +78,7 @@ const CustomAlert = ({
         },
         confirm: {
             icon: (
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-7 h-7" style={{ animation: 'bounceInfo 1s ease-out 0.2s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01" />
                     <circle cx="12" cy="12" r="10" strokeWidth={2} />
                 </svg>
@@ -162,6 +165,23 @@ const CustomAlert = ({
                         opacity: 1;
                         transform: scale(1) translateY(0);
                     }
+                }
+                @keyframes drawCheck {
+                    to { stroke-dashoffset: 0; }
+                }
+                @keyframes shakeIcon {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-4px) rotate(-5deg); }
+                    75% { transform: translateX(4px) rotate(5deg); }
+                }
+                @keyframes pulseWarning {
+                    0%, 100% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.1); opacity: 0.8; }
+                }
+                @keyframes bounceInfo {
+                    0% { transform: scale(0.5); opacity: 0; }
+                    50% { transform: scale(1.2); opacity: 1; }
+                    100% { transform: scale(1); opacity: 1; }
                 }
             `}</style>
         </div>,
