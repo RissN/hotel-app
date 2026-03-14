@@ -110,7 +110,7 @@ const DashboardLayout = () => {
 
             {/* Sidebar */}
             <aside
-                className="w-full md:w-64 bg-slate-900 border-r border-slate-800 text-slate-300 flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.1)] z-20 print:hidden transition-all duration-300"
+                className="w-full md:w-64 md:sticky md:top-0 md:h-screen bg-slate-900 border-r border-slate-800 text-slate-300 flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.1)] z-20 print:hidden transition-all duration-300 overflow-y-auto"
                 style={loggingOut ? { animation: 'logoutContentFade 0.5s ease-in forwards' } : {}}
             >
                 <div className="p-6 border-b border-slate-800/50 backdrop-blur-sm">
