@@ -19,7 +19,6 @@ const PAYMENT_METHOD_LABEL = {
 // ─── Print helper ──────────────────────────────────────────────────────────────
 function buildConfirmationHTML(tx) {
     const fmt = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
-    const fmtShort = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
     const payLabel = PAYMENT_METHOD_LABEL[tx.payment_method] || tx.payment_method || '-';
 
     return `<!DOCTYPE html>
@@ -29,41 +28,77 @@ function buildConfirmationHTML(tx) {
   <title>Reservation Confirmation – ${tx.booking_no || '-'}</title>
   <style>
     @page { margin: 0; size: A4 portrait; }
-    body { margin: 0; padding: 1cm 1.5cm; font-family: Arial, sans-serif; font-size: 10px; color: #111; }
-    h1 { font-size: 16px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; margin: 0; }
-    h2 { font-size: 13px; font-weight: 700; margin: 0 0 6px 0; }
-    .center { text-align: center; }
-    .divider-thick { border: none; border-top: 2px solid #111; margin: 2px 0; }
-    .divider { border: none; border-top: 1px solid #111; margin: 2px 0 10px 0; }
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; margin-bottom: 10px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { margin: 0; padding: 0.5cm 1.5cm 1cm; font-family: Arial, sans-serif; font-size: 10px; color: #111; }
+    .page { max-width: 720px; margin: 0 auto; }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 10px; }
+    .header img { width: 56px; height: 56px; object-fit: contain; margin-bottom: 2px; }
+    .header h1 { font-size: 16px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; }
+
+    /* Section title */
+    .section-title { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+    .divider-thick { border: none; border-top: 2px solid #111; margin-bottom: 2px; }
+    .divider { border: none; border-top: 1px solid #111; margin-bottom: 0; }
+
+    /* Grid 2-col */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; margin: 10px 0; }
     .row { display: flex; margin-bottom: 3px; }
-    .lbl { width: 120px; flex-shrink: 0; color: #333; }
-    .lbl-sm { width: 80px; flex-shrink: 0; color: #333; }
-    .val { font-weight: 600; }
-    .box { border: 1px solid #888; background: #fafafa; padding: 8px 10px; margin-bottom: 10px; line-height: 1.6; }
-    .box-title { font-weight: 700; color: #c00; margin-bottom: 6px; }
-    .bank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
-    .bank-left { border-left: 3px solid #3b82f6; padding-left: 6px; }
-    .policy { background: #f0f0f0; padding: 6px 10px; font-size: 8px; color: #555; }
+    .lbl { width: 112px; flex-shrink: 0; color: #1f2937; }
+    .lbl-sm { width: 80px; flex-shrink: 0; color: #1f2937; }
+    .val { font-weight: 700; }
+    .email-link { color: #2563eb; text-decoration: underline; }
+    .red { color: #dc2626; }
+
+    /* Guest details */
+    .details { margin-bottom: 10px; }
+    .details .row { margin-bottom: 4px; }
+    .details .lbl { width: 128px; }
+
+    /* Guarantee box */
+    .box { border: 1px solid #9ca3af; background: #fafafa; padding: 8px 12px; margin-bottom: 10px; border-radius: 2px; font-size: 9px; line-height: 1.6; }
+    .box-title { font-weight: 700; color: #b91c1c; margin: 6px 0; }
+    .bank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .bank-left { border-left: 3px solid #60a5fa; padding-left: 8px; }
+
+    /* Credit card section */
+    .cc-section { margin-bottom: 10px; font-size: 10px; }
+    .cc-section p.label { margin-bottom: 6px; color: #1f2937; }
+    .cc-row { display: flex; align-items: center; margin-bottom: 6px; width: 75%; }
+    .cc-row .cc-lbl { width: 160px; flex-shrink: 0; color: #1f2937; white-space: nowrap; }
+    .cc-row .colon { margin-right: 8px; }
+    .cc-line { flex: 1; border-bottom: 1px solid #6b7280; min-width: 0; height: 1px; }
+    .cc-checks { display: flex; align-items: center; gap: 16px; }
+    .cc-checks label { display: flex; align-items: center; gap: 4px; }
+    .cc-checks input { width: 12px; height: 12px; }
+    .expire-fields { display: flex; align-items: center; width: 128px; }
+    .expire-fields span.seg { flex: 1; border-bottom: 1px solid #6b7280; height: 1px; }
+    .expire-fields span.sep { margin: 0 4px; }
+    .sig-row { display: flex; align-items: flex-end; margin-top: 12px; width: 75%; }
+
+    /* Policy */
+    .policy { background: #f2f2f2; padding: 6px 12px; font-size: 8px; color: #374151; }
     .policy-title { font-weight: 700; text-decoration: underline; color: #111; margin-bottom: 3px; }
-    ol { margin: 0; padding-left: 14px; }
-    .price-section { margin: 8px 0; }
-    .price-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-    .price-row .val { color: #c00; font-weight: 700; }
-    table.price-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; }
-    table.price-table td { padding: 2px 4px; }
-    table.price-table tr:last-child td { border-top: 1px solid #888; font-weight: 700; }
+    .policy ol { margin: 0; padding-left: 14px; }
+    .policy li { margin-bottom: 2px; }
   </style>
 </head>
 <body>
-  <div class="center" style="margin-bottom:8px;">
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <img src="/logo.png" alt="Logo PPKD" onerror="this.style.display='none'"/>
     <h1>PPKD HOTEL</h1>
   </div>
 
-  <h2>Reservation Confirmation</h2>
+  <!-- Title -->
+  <p class="section-title">Reservation Confirmation</p>
   <hr class="divider-thick"/>
   <hr class="divider"/>
 
+  <!-- Company / Agent Info -->
   <div class="grid2">
     <div>
       <div class="row"><span class="lbl">To.</span><span class="val">: ${tx.guest_name || '-'}</span></div>
@@ -71,39 +106,29 @@ function buildConfirmationHTML(tx) {
       <div class="row"><span class="lbl">Booking No.</span><span>: ${tx.booking_no || '-'}</span></div>
       <div class="row"><span class="lbl">Book By</span><span>: ${tx.receptionist || 'Resepsionis'} (Hotel)</span></div>
       <div class="row"><span class="lbl">Phone</span><span>: ${tx.phone || '-'}</span></div>
-      <div class="row"><span class="lbl">Email</span><span>: ${tx.email || '-'}</span></div>
+      <div class="row"><span class="lbl">Email</span><span class="email-link">: ${tx.email || '-'}</span></div>
     </div>
     <div>
       <div class="row"><span class="lbl-sm">Telp</span><span>: (021) 1234567</span></div>
       <div class="row"><span class="lbl-sm">Fax</span><span>: (021) 7654321</span></div>
-      <div class="row"><span class="lbl-sm">Email</span><span>: info@ppkdhotel.com</span></div>
-      <div class="row"><span class="lbl-sm">Date</span><span>: ${fmtShort(new Date().toISOString())}</span></div>
+      <div class="row"><span class="lbl-sm">Email</span><span class="email-link">: info@ppkdhotel.com</span></div>
+      <div class="row"><span class="lbl-sm">Date</span><span>: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
     </div>
   </div>
-  <hr class="divider"/>
+  <hr class="divider" style="margin-bottom:10px;"/>
 
-  <div style="margin-bottom:10px;">
+  <!-- Guest & Room Details -->
+  <div class="details">
     <div class="row"><span class="lbl">First Name</span><span class="val">: ${(tx.guest_name || '-').toUpperCase()}</span></div>
-    <div class="row"><span class="lbl">Nationality</span><span>: ${tx.nationality || '-'}</span></div>
     <div class="row"><span class="lbl">Arrival Date</span><span class="val">: ${fmt(tx.arrival_date)}</span></div>
     <div class="row"><span class="lbl">Departure Date</span><span class="val">: ${fmt(tx.departure_date)}</span></div>
     <div class="row"><span class="lbl">Total Night</span><span>: ${tx.total_nights || '-'} Malam (Nights)</span></div>
     <div class="row"><span class="lbl">Room/Unit Type</span><span>: Kamar ${tx.room_no || '-'} (${tx.room_type || '-'})</span></div>
-    <div class="row"><span class="lbl">No. of Rooms</span><span>: ${tx.number_of_rooms || '-'}</span></div>
     <div class="row"><span class="lbl">Person Pax</span><span>: ${tx.number_of_persons || '-'} Orang (Person)</span></div>
-    <div class="row" style="margin-top:6px;"><span class="lbl" style="color:#c00;">Room Rate Net</span><span style="color:#c00;font-weight:700;">: ${formatIDR(tx.room_rate)} / Malam</span></div>
+    <div class="row" style="margin-top:6px;"><span class="lbl red">Room Rate Net</span><span class="val red">: ${formatIDR(tx.room_rate)} / Malam</span></div>
   </div>
 
-  <table class="price-table">
-    <tr><td>Subtotal (${tx.number_of_rooms || 1} kamar × ${tx.total_nights || 0} malam)</td><td style="text-align:right;">${formatIDR(tx.subtotal)}</td></tr>
-    <tr><td>PPN 11%</td><td style="text-align:right;">${formatIDR(tx.tax)}</td></tr>
-    <tr><td>Service Charge 5%</td><td style="text-align:right;">${formatIDR(tx.service_charge)}</td></tr>
-    <tr><td><strong>Grand Total</strong></td><td style="text-align:right;"><strong>${formatIDR(tx.grand_total)}</strong></td></tr>
-  </table>
-
-  <div class="row" style="margin-bottom:10px;"><span class="lbl">Metode Pembayaran</span><span class="val">: ${payLabel}</span></div>
-  ${tx.payment_ref ? `<div class="row" style="margin-bottom:10px;"><span class="lbl">Ref. Pembayaran</span><span>: ${tx.payment_ref}</span></div>` : ''}
-
+  <!-- Guarantee Info Box -->
   <div class="box">
     <p>Please guarantee this booking with credit card number with clear copy of the card both sides and card holder signature in the column provided the copy of credit card both sides should be faxed to hotel fax number.</p>
     <p class="box-title">Please settle your outstanding to or account:</p>
@@ -116,11 +141,37 @@ function buildConfirmationHTML(tx) {
       </div>
       <div>
         <p style="font-weight:700;margin:0 0 2px 0;">Mandiri Account</p>
-        <p style="font-family:monospace;margin:0;">123-00-9876543-2</p>
+        <p style="font-family:monospace;font-size:10px;margin:0;">123-00-9876543-2</p>
       </div>
     </div>
   </div>
 
+  <!-- Credit Card Section -->
+  <div class="cc-section">
+    <p class="label">Reservation guaranteed by the following credit card:</p>
+    <div class="cc-row"><span class="cc-lbl">Card Number</span><span class="colon">:</span><div class="cc-line"></div></div>
+    <div class="cc-row"><span class="cc-lbl">Card Holder name</span><span class="colon">:</span><div class="cc-line"></div></div>
+    <div class="cc-row">
+      <span class="cc-lbl">Card Type</span><span class="colon">:</span>
+      <div class="cc-checks">
+        <label><input type="checkbox" disabled/> Visa</label>
+        <label><input type="checkbox" disabled/> Master</label>
+        <label><input type="checkbox" disabled/> Amex</label>
+      </div>
+    </div>
+    <div class="cc-row"><span class="cc-lbl">Or by Bank Transfer to</span><span class="colon">:</span><div class="cc-line"></div></div>
+    <div class="cc-row">
+      <span class="cc-lbl red">Expired date/month/year</span><span class="colon">:</span>
+      <div class="expire-fields">
+        <span class="seg"></span><span class="sep">/</span>
+        <span class="seg"></span><span class="sep">/</span>
+        <span class="seg"></span>
+      </div>
+    </div>
+    <div class="sig-row"><span class="cc-lbl">Card holder signature</span><span class="colon">:</span><div class="cc-line"></div></div>
+  </div>
+
+  <!-- Cancellation Policy -->
   <div class="policy">
     <p class="policy-title">Cancellation policy:</p>
     <ol>
@@ -129,6 +180,8 @@ function buildConfirmationHTML(tx) {
       <li>The Hotel will charge 1 night for guaranteed reservations that have not been canceling before the day of arrival. Please carefully note your cancellation number.</li>
     </ol>
   </div>
+
+</div>
 </body>
 </html>`;
 }
