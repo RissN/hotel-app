@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * CustomAlert - A premium, reusable modal component.
@@ -102,7 +103,7 @@ const CustomAlert = ({
         if (e.target === overlayRef.current) onClose?.();
     };
 
-    return (
+    return createPortal(
         <div
             ref={overlayRef}
             onClick={handleBackdropClick}
@@ -159,7 +160,8 @@ const CustomAlert = ({
                     }
                 }
             `}</style>
-        </div>
+        </div>,
+        document.body
     );
 };
 

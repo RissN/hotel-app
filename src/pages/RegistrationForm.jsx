@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
 export default function RegistrationForm() {
     const navigate = useNavigate();
     const [showConfirm, setShowConfirm] = useState(false);
+    const [navigating, setNavigating] = useState(false);
     const [formData, setFormData] = useState({
         roomNo: '',
         numberOfPerson: '',
@@ -41,7 +43,10 @@ export default function RegistrationForm() {
 
     const handleConfirm = () => {
         setShowConfirm(false);
-        navigate('/payment', { state: { reservationData: formData } });
+        setNavigating(true);
+        setTimeout(() => {
+            navigate('/payment', { state: { reservationData: formData } });
+        }, 1200);
     };
 
     const handleCancel = () => {
@@ -58,7 +63,56 @@ export default function RegistrationForm() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 animate-gradient py-10 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto rounded-2xl shadow-2xl overflow-hidden border border-gray-200 bg-white">
+            {/* Page Transition Overlay */}
+            {navigating && (
+                <div
+                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+                    style={{
+                        background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1e40af 100%)',
+                        animation: 'pageTransIn 0.5s ease-out',
+                    }}
+                >
+                    <div style={{ animation: 'pageTransBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both' }}>
+                        <div
+                            className="w-24 h-24 rounded-full flex items-center justify-center"
+                            style={{
+                                background: 'rgba(255,255,255,0.15)',
+                                backdropFilter: 'blur(10px)',
+                                boxShadow: '0 0 40px rgba(59, 130, 246, 0.3)',
+                            }}
+                        >
+                            <svg className="w-12 h-12 text-white" style={{ animation: 'pageTransSpin 1.2s linear infinite' }} fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 className="text-white text-xl font-bold mt-6" style={{ animation: 'pageTransTextIn 0.5s ease-out 0.5s both' }}>
+                        Menuju Halaman Pembayaran
+                    </h2>
+                    <div className="flex items-center gap-3 mt-4" style={{ animation: 'pageTransTextIn 0.5s ease-out 0.7s both' }}>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-blue-600 text-xs font-bold">✓</div>
+                            <span className="text-white/80 text-sm">Registrasi</span>
+                        </div>
+                        <div className="w-8 h-0.5 bg-white/40" />
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-white text-xs font-bold" style={{ animation: 'pageTransPulse 1s ease-in-out infinite' }}>2</div>
+                            <span className="text-white font-semibold text-sm">Pembayaran</span>
+                        </div>
+                        <div className="w-8 h-0.5 bg-white/20" />
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-xs font-bold">3</div>
+                            <span className="text-white/40 text-sm">Konfirmasi</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div
+                className="max-w-7xl mx-auto rounded-2xl shadow-2xl overflow-hidden border border-gray-200 bg-white animate-page-entrance"
+                style={navigating ? { animation: 'pageTransContentOut 0.4s ease-in forwards' } : {}}
+            >
 
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-8 py-6 text-white">
@@ -266,13 +320,27 @@ export default function RegistrationForm() {
             </div>
 
             {/* ── Confirmation Modal ── */}
-            {showConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+            {showConfirm && createPortal(
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) handleCancel(); }}
+                    style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        backdropFilter: 'blur(6px)',
+                        animation: 'confirmOverlayIn 0.3s ease-out',
+                    }}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
+                        style={{ animation: 'confirmModalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                    >
                         {/* Modal Header */}
                         <div className="bg-gradient-to-r from-blue-700 to-blue-500 px-6 py-5 text-white">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                <div
+                                    className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"
+                                    style={{ animation: 'confirmIconPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both' }}
+                                >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -287,7 +355,10 @@ export default function RegistrationForm() {
                         {/* Modal Body */}
                         <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
                             {/* Guest */}
-                            <div className="bg-blue-50 rounded-lg p-4">
+                            <div
+                                className="bg-blue-50 rounded-lg p-4"
+                                style={{ animation: 'confirmSectionIn 0.4s ease-out 0.15s both' }}
+                            >
                                 <h4 className="text-xs font-bold uppercase tracking-wide text-blue-600 mb-2">Data Tamu</h4>
                                 <div className="space-y-1 text-sm">
                                     <div className="flex justify-between"><span className="text-gray-500">Nama</span><span className="font-medium text-gray-800">{formData.name || '-'}</span></div>
@@ -298,7 +369,10 @@ export default function RegistrationForm() {
                             </div>
 
                             {/* Room */}
-                            <div className="bg-slate-50 rounded-lg p-4">
+                            <div
+                                className="bg-slate-50 rounded-lg p-4"
+                                style={{ animation: 'confirmSectionIn 0.4s ease-out 0.25s both' }}
+                            >
                                 <h4 className="text-xs font-bold uppercase tracking-wide text-blue-600 mb-2">Informasi Kamar</h4>
                                 <div className="space-y-1 text-sm">
                                     <div className="flex justify-between"><span className="text-gray-500">No. Kamar</span><span className="font-medium text-gray-800">{formData.roomNo || '-'}</span></div>
@@ -309,7 +383,10 @@ export default function RegistrationForm() {
                             </div>
 
                             {/* Dates */}
-                            <div className="bg-green-50 rounded-lg p-4">
+                            <div
+                                className="bg-green-50 rounded-lg p-4"
+                                style={{ animation: 'confirmSectionIn 0.4s ease-out 0.35s both' }}
+                            >
                                 <h4 className="text-xs font-bold uppercase tracking-wide text-green-600 mb-2">Tanggal Menginap</h4>
                                 <div className="space-y-1 text-sm">
                                     <div className="flex justify-between"><span className="text-gray-500">Check-in</span><span className="font-medium text-gray-800">{formatDate(formData.arrivalDate)}</span></div>
@@ -319,7 +396,10 @@ export default function RegistrationForm() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+                        <div
+                            className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50"
+                            style={{ animation: 'confirmSectionIn 0.4s ease-out 0.4s both' }}
+                        >
                             <button
                                 onClick={handleCancel}
                                 className="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200 text-sm"
@@ -334,8 +414,51 @@ export default function RegistrationForm() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
+
+            {/* Page Transition & Confirmation Modal Animations */}
+            <style>{`
+                @keyframes pageTransIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes pageTransBounce {
+                    from { opacity: 0; transform: scale(0.3); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                @keyframes pageTransSpin {
+                    to { transform: rotate(360deg); }
+                }
+                @keyframes pageTransTextIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes pageTransPulse {
+                    0%, 100% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.15); opacity: 0.8; }
+                }
+                @keyframes pageTransContentOut {
+                    to { opacity: 0; transform: scale(0.96) translateY(10px); }
+                }
+                @keyframes confirmOverlayIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes confirmModalIn {
+                    from { opacity: 0; transform: scale(0.85) translateY(30px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                @keyframes confirmIconPop {
+                    from { opacity: 0; transform: scale(0); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                @keyframes confirmSectionIn {
+                    from { opacity: 0; transform: translateY(14px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </div>
     );
 }

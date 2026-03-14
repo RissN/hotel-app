@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../supabaseClient';
 import CustomAlert from '../components/CustomAlert';
 
@@ -239,7 +240,7 @@ const UserManagement = () => {
     );
 
     return (
-        <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen">
+        <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen animate-page-entrance">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
@@ -387,10 +388,10 @@ const UserManagement = () => {
             </div>
 
             {/* Modal Form (Add & Edit) */}
-            {isModalOpen && (
+            {isModalOpen && createPortal(
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal}></div>
-                    <div className="relative bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal} style={{ animation: 'umOverlayIn 0.3s ease-out' }}></div>
+                    <div className="relative bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden" style={{ animation: 'umModalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
                         {/* Modal Header */}
                         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                             <h3 className="text-xl font-bold text-slate-800">
@@ -475,8 +476,27 @@ const UserManagement = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
+
+            {/* User Management Animations */}
+            <style>{`
+                @keyframes umOverlayIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes umModalIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.85) translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+            `}</style>
 
             {/* Custom Alert Modal */}
             <CustomAlert

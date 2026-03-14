@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 
@@ -140,19 +141,26 @@ function printTransaction(tx) {
     }, 500);
 }
 
-// ─── Detail Modal ──────────────────────────────────────────────────────────────
 function DetailModal({ activity, onClose, onPrint }) {
     if (!activity) return null;
 
     const fmt = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
     const payLabel = PAYMENT_METHOD_LABEL[activity.payment_method] || activity.payment_method || '-';
 
-    return (
+    return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-6 animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(6px)',
+                animation: 'detailOverlayIn 0.3s ease-out',
+            }}
         >
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div
+                className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                style={{ animation: 'detailModalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+            >
                 {/* Modal Header */}
                 <div className="bg-gradient-to-r from-indigo-600 to-blue-500 px-6 py-5 rounded-t-3xl flex items-center justify-between sticky top-0 z-10">
                     <div>
@@ -161,7 +169,7 @@ function DetailModal({ activity, onClose, onPrint }) {
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+                        className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all hover:rotate-90 duration-300"
                         aria-label="Tutup"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -174,7 +182,7 @@ function DetailModal({ activity, onClose, onPrint }) {
                 <div className="p-6 space-y-5">
 
                     {/* Section: Info Tamu */}
-                    <section>
+                    <section style={{ animation: 'detailSectionIn 0.4s ease-out 0.1s both' }}>
                         <h4 className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-3 flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                             Informasi Tamu
@@ -190,7 +198,7 @@ function DetailModal({ activity, onClose, onPrint }) {
                     </section>
 
                     {/* Section: Info Kamar */}
-                    <section>
+                    <section style={{ animation: 'detailSectionIn 0.4s ease-out 0.2s both' }}>
                         <h4 className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-3 flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                             Informasi Kamar
@@ -204,7 +212,7 @@ function DetailModal({ activity, onClose, onPrint }) {
                     </section>
 
                     {/* Section: Tanggal Menginap */}
-                    <section>
+                    <section style={{ animation: 'detailSectionIn 0.4s ease-out 0.3s both' }}>
                         <h4 className="text-xs font-bold uppercase tracking-widest text-emerald-600 mb-3 flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             Tanggal Menginap
@@ -217,7 +225,7 @@ function DetailModal({ activity, onClose, onPrint }) {
                     </section>
 
                     {/* Section: Pembayaran */}
-                    <section>
+                    <section style={{ animation: 'detailSectionIn 0.4s ease-out 0.4s both' }}>
                         <h4 className="text-xs font-bold uppercase tracking-widest text-purple-600 mb-3 flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                             Informasi Pembayaran
@@ -241,13 +249,13 @@ function DetailModal({ activity, onClose, onPrint }) {
                     </section>
 
                     {/* Dibuat pada */}
-                    <p className="text-xs text-slate-400 text-right">
+                    <p className="text-xs text-slate-400 text-right" style={{ animation: 'detailSectionIn 0.4s ease-out 0.5s both' }}>
                         Dibuat: {activity.created_at ? new Date(activity.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                     </p>
                 </div>
 
                 {/* Modal Footer */}
-                <div className="px-6 pb-6 flex justify-end gap-3">
+                <div className="px-6 pb-6 flex justify-end gap-3" style={{ animation: 'detailSectionIn 0.4s ease-out 0.5s both' }}>
                     <button
                         onClick={onClose}
                         className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-all text-sm"
@@ -265,7 +273,36 @@ function DetailModal({ activity, onClose, onPrint }) {
                     </button>
                 </div>
             </div>
-        </div>
+
+            {/* Detail Modal Animations */}
+            <style>{`
+                @keyframes detailOverlayIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes detailModalIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.85) translateY(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+                @keyframes detailSectionIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(16px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `}</style>
+        </div>,
+        document.body
     );
 }
 
@@ -370,7 +407,7 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in zoom-in duration-500">
+        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-page-entrance">
             <header className="mb-10">
                 <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard Ringkasan</h1>
                 <p className="text-slate-500 mt-2 text-lg">Selamat datang kembali, pantau aktivitas hotel hari ini.</p>

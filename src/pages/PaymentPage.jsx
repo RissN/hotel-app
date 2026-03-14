@@ -29,6 +29,7 @@ export default function PaymentPage() {
     const [cardExpiry, setCardExpiry] = useState('');
     const [bankRef, setBankRef] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [navigatingOut, setNavigatingOut] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
     const roomRate = ROOM_PRICES[reservationData.roomType] || 0;
@@ -110,8 +111,12 @@ export default function PaymentPage() {
                 return;
             }
 
-            // Navigate to success page with data
-            navigate('/payment-success', { state: { reservationData, paymentData, bookingNo } });
+            // Show transition then navigate to success page
+            setIsProcessing(false);
+            setNavigatingOut(true);
+            setTimeout(() => {
+                navigate('/payment-success', { state: { reservationData, paymentData, bookingNo } });
+            }, 1400);
 
         } catch (err) {
             console.error('Unexpected error:', err);
@@ -127,9 +132,56 @@ export default function PaymentPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 animate-gradient py-10 px-4">
+            {/* Page Transition Overlay */}
+            {navigatingOut && (
+                <div
+                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+                    style={{
+                        background: 'linear-gradient(135deg, #065f46 0%, #059669 50%, #047857 100%)',
+                        animation: 'payTransIn 0.5s ease-out',
+                    }}
+                >
+                    <div style={{ animation: 'payTransBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both' }}>
+                        <div
+                            className="w-24 h-24 rounded-full flex items-center justify-center"
+                            style={{
+                                background: 'rgba(255,255,255,0.2)',
+                                backdropFilter: 'blur(10px)',
+                                boxShadow: '0 0 40px rgba(16, 185, 129, 0.4)',
+                            }}
+                        >
+                            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ animation: 'payTransCheck 0.5s ease-out 0.6s both' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 className="text-white text-xl font-bold mt-6" style={{ animation: 'payTransTextIn 0.5s ease-out 0.6s both' }}>
+                        Pembayaran Berhasil!
+                    </h2>
+                    <p className="text-white/70 text-sm mt-2" style={{ animation: 'payTransTextIn 0.5s ease-out 0.8s both' }}>
+                        Menuju halaman konfirmasi...
+                    </p>
+                    <div className="flex items-center gap-3 mt-5" style={{ animation: 'payTransTextIn 0.5s ease-out 1s both' }}>
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
+                            <span className="text-white/80 text-sm">Registrasi</span>
+                        </div>
+                        <div className="w-8 h-0.5 bg-white/50" />
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-emerald-600 text-xs font-bold">✓</div>
+                            <span className="text-white/80 text-sm">Pembayaran</span>
+                        </div>
+                        <div className="w-8 h-0.5 bg-white/40" />
+                        <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-white text-xs font-bold" style={{ animation: 'payTransPulse 1s ease-in-out infinite' }}>✓</div>
+                            <span className="text-white font-semibold text-sm">Konfirmasi</span>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Step Indicator */}
-            <div className="max-w-3xl mx-auto mb-8">
+            <div className="max-w-3xl mx-auto mb-8" style={navigatingOut ? { animation: 'payTransContentOut 0.4s ease-in forwards' } : {}}>
                 <div className="flex items-center justify-center gap-0">
                     {/* Step 1 */}
                     <div className="flex items-center">
@@ -151,7 +203,7 @@ export default function PaymentPage() {
                 </div>
             </div>
 
-            <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-6" style={navigatingOut ? { animation: 'payTransContentOut 0.4s ease-in 0.1s forwards' } : {}}>
 
                 {/* ── Left: Payment Method ── */}
                 <div className="md:col-span-3 space-y-5">
@@ -362,6 +414,33 @@ export default function PaymentPage() {
                 message={alertConfig.message}
                 type={alertConfig.type}
             />
+
+            {/* Page Transition Animations */}
+            <style>{`
+                @keyframes payTransIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes payTransBounce {
+                    from { opacity: 0; transform: scale(0.3); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                @keyframes payTransCheck {
+                    from { opacity: 0; stroke-dasharray: 30; stroke-dashoffset: 30; }
+                    to { opacity: 1; stroke-dasharray: 30; stroke-dashoffset: 0; }
+                }
+                @keyframes payTransTextIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes payTransPulse {
+                    0%, 100% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.15); opacity: 0.8; }
+                }
+                @keyframes payTransContentOut {
+                    to { opacity: 0; transform: scale(0.96) translateY(10px); }
+                }
+            `}</style>
         </div>
     );
 }
