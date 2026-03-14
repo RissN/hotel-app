@@ -108,11 +108,11 @@ const CustomAlert = ({
             ref={overlayRef}
             onClick={handleBackdropClick}
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)' }}
+            style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', animation: 'alertOverlayIn 0.3s ease-out' }}
         >
             <div
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
-                style={{ animation: 'alertSlideIn 0.25s ease-out' }}
+                style={{ animation: 'alertBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
             >
                 {/* Header section with icon */}
                 <div className="flex flex-col items-center pt-8 pb-2 px-6">
@@ -149,10 +149,14 @@ const CustomAlert = ({
 
             {/* Animation keyframes */}
             <style>{`
-                @keyframes alertSlideIn {
+                @keyframes alertOverlayIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes alertBounceIn {
                     from {
                         opacity: 0;
-                        transform: scale(0.9) translateY(10px);
+                        transform: scale(0.8) translateY(20px);
                     }
                     to {
                         opacity: 1;
