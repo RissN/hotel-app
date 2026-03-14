@@ -440,6 +440,28 @@ export default function Dashboard() {
     const [monthlyRevenue, setMonthlyRevenue] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedActivity, setSelectedActivity] = useState(null);
+    const [jakartaTime, setJakartaTime] = useState('');
+
+    // Real-time Jakarta clock
+    useEffect(() => {
+        const tick = () => {
+            const now = new Date().toLocaleString('id-ID', {
+                timeZone: 'Asia/Jakarta',
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            });
+            setJakartaTime(now);
+        };
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
+    }, []);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -448,13 +470,30 @@ export default function Dashboard() {
                     .from('transactions')
                     .select('*', { count: 'exact', head: true });
 
-                const { count: activeReservations } = await supabase
+                const { data: allDates } = await supabase
                     .from('transactions')
-                    .select('*', { count: 'exact', head: true });
-
-                const { count: completedReservations } = await supabase
-                    .from('transactions')
-                    .select('*', { count: 'exact', head: true });
+                    .select('arrival_date, departure_date');
+                
+                let activeCount = 0;
+                let completedCount = 0;
+                
+                if (allDates) {
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    
+                    allDates.forEach(t => {
+                        const arrival = new Date(t.arrival_date);
+                        arrival.setHours(0,0,0,0);
+                        const departure = new Date(t.departure_date);
+                        departure.setHours(0,0,0,0);
+                        
+                        if (today >= arrival && today < departure) {
+                            activeCount++;
+                        } else if (today >= departure) {
+                            completedCount++;
+                        }
+                    });
+                }
 
                 const { count: totalUsers } = await supabase
                     .from('user_roles')
@@ -521,8 +560,8 @@ export default function Dashboard() {
 
                 setStats({
                     totalReservations: totalReservations || 0,
-                    activeReservations: activeReservations || 0,
-                    completedReservations: completedReservations || 0,
+                    activeReservations: activeCount,
+                    completedReservations: completedCount,
                     totalUsers: totalUsers || 0
                 });
             } catch (error) {
@@ -581,9 +620,17 @@ export default function Dashboard() {
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8 animate-page-entrance">
-            <header className="mb-10">
-                <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard Ringkasan</h1>
-                <p className="text-slate-500 mt-2 text-lg">Selamat datang kembali, pantau aktivitas hotel hari ini.</p>
+            <header className="mb-10 flex items-start justify-between">
+                <div>
+                    <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard Ringkasan</h1>
+                    <p className="text-slate-500 mt-2 text-lg">Selamat datang kembali, pantau aktivitas hotel hari ini.</p>
+                </div>
+                <div className="text-right shrink-0 ml-6">
+                    <div className="bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">🕐 Waktu Jakarta (WIB)</p>
+                        <p className="text-lg font-bold text-slate-800 tabular-nums tracking-tight">{jakartaTime}</p>
+                    </div>
+                </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -737,7 +784,30 @@ export default function Dashboard() {
                 <h2 className="text-xl font-bold text-slate-800 mb-6">Aktivitas Terbaru</h2>
                 {recentActivities && recentActivities.length > 0 ? (
                     <div className="space-y-3">
-                        {recentActivities.map((activity, idx) => (
+                        {recentActivities.map((activity, idx) => {
+                            const now = new Date();
+                            now.setHours(0,0,0,0);
+                            const arr = new Date(activity.arrival_date);
+                            arr.setHours(0,0,0,0);
+                            const dep = new Date(activity.departure_date);
+                            dep.setHours(0,0,0,0);
+
+                            let badgeClass, badgeIcon, badgeText;
+                            if (now >= arr && now < dep) {
+                                badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                badgeIcon = <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>;
+                                badgeText = 'Aktif';
+                            } else if (now >= dep) {
+                                badgeClass = 'bg-purple-50 text-purple-700 border-purple-200';
+                                badgeIcon = <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
+                                badgeText = 'Selesai';
+                            } else {
+                                badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                                badgeIcon = <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+                                badgeText = 'Akan Datang';
+                            }
+
+                            return (
                             <div
                                 key={idx}
                                 className="flex items-center justify-between border border-slate-100 rounded-2xl px-5 py-4 hover:bg-slate-50 transition-colors"
@@ -792,10 +862,11 @@ export default function Dashboard() {
                                         Print
                                     </button>
 
-                                    {/* Status Badge — paling kanan */}
-                                    <div className="flex flex-col items-center justify-center border-l border-slate-100 pl-3 min-w-[80px]">
-                                        <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold leading-none bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm whitespace-nowrap mb-1">
-                                            Selesai
+                                    {/* Status Badge — dinamis */}
+                                    <div className="flex flex-col items-center justify-center border-l border-slate-100 pl-3 min-w-[90px]">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold leading-none border shadow-sm whitespace-nowrap mb-1 ${badgeClass}`}>
+                                            {badgeIcon}
+                                            {badgeText}
                                         </span>
                                         <p className="text-slate-400 text-[10px] leading-none whitespace-nowrap">
                                             {activity.created_at ? new Date(activity.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
@@ -803,7 +874,7 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        );})}
                     </div>
                 ) : (
                     <div className="text-center py-12 text-slate-400">
