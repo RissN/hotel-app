@@ -9,9 +9,10 @@ Sebuah aplikasi web modern (berbasis React dan Supabase) untuk manajemen registr
 - **Sistem Autentikasi & Role-Based Access Control (RBAC):** Memisahkan hak akses antara `Resepsionis`, `Admin`, dan `Superadmin`.
 - **Manajemen Pengguna (User Management):** Superadmin dapat menambah, mengedit role, dan menghapus akun staf.
 - **Form Reservasi Dinamis:** Pengisian data tamu, kamar, dan periode menginap secara detail dilengkapi validasi.
-- **Sistem Pembayaran Terpadu:** Kalkulasi otomatis untuk harga kamar (berdasarkan tipe kamar), PPN (11%), dan Service Charge (5%).
-- **Cetak Konfirmasi (Print-Ready A4):** Halaman konfirmasi dirancang khusus dengan Tailwind CSS `@media print` agar pas persis untuk dicetak pada kertas A4 tanpa margin berlebih.
-- **UI/UX Premium:** Dilengkapi dengan *animated background gradients*, transisi halus, dan komponen `CustomAlert` untuk notifikasi dan konfirmasi tindakan yang merusak (seperti hapus user).
+- **Sistem Pembayaran Terpadu:** Kalkulasi otomatis untuk harga kamar (berdasarkan tipe kamar), PPN (11%), dan Service Charge (5%). Mendukung pembayaran via **Tunai (Cash)**, **Transfer Bank**, **Kartu Kredit**, dan **E-Wallet** (GoPay, OVO, DANA, LinkAja).
+- **Kode Referensi Unik:** Menghasilkan kode referensi pembayaran otomatis untuk setiap transaksi non-tunai (misal: `CC-XXXXX`, `GO-XXXXX`, `MANDIRI-XXXXX`).
+- **Cetak Konfirmasi (Print-Ready A4):** Halaman konfirmasi dan struk pelunasan dirancang seragam dengan Tailwind CSS `@media print` sehingga pas di kertas A4 dari Dashboard, Reservasi, maupun halaman Sukses.
+- **UI/UX Premium:** Dilengkapi dengan *animated background gradients*, transisi halus, dan komponen `CustomAlert` untuk notifikasi yang elegan.
 
 ---
 
@@ -202,11 +203,11 @@ Diakses melalui menu Dashboard (khususnya Resepsionis). Formulir mencakup:
 Klik **`Submit & Checkout`** untuk menuju pembayaran.
 
 ### 4. Halaman Pembayaran (`/payment`)
-- Otomatis menghitung: `Harga Kamar × Total Malam × Jumlah Kamar`.
-- Menambahkan **PPN 11%** dan **Service Charge 5%**.
-- Terdapat metode pembayaran: tunai, transfer bank, dan kartu kredit.
+- Otomatis menghitung: **Harga Kamar × Total Malam × Jumlah Kamar**. Menambahkan PPN 11% dan Service Charge 5%.
+- Terdapat metode pembayaran: **Cash**, **Transfer Bank**, **Kartu Kredit**, dan **E-Wallet**.
+- Setiap transaksi pembayaran online/non-tunai akan otomatis diformat dengan *Kode Referensi Unik* yang masuk ke dalam database dan tagihan invoice.
 
-Klik **`Bayar & Cetak Struk`** untuk menuju konfirmasi cetak.
+Klik **`Proses Pembayaran`** untuk menuju konfirmasi cetak.
 
 ### 5. Invoice & Konfirmasi (`/confirmation`)
 - Halaman ini menampilkan bukti reservasi resmi.
