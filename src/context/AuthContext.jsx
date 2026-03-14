@@ -80,7 +80,6 @@ export const AuthProvider = ({ children }) => {
         // Mark that an explicit login is in progress.
         // This prevents onAuthStateChange from interfering.
         isLoggingIn.current = true;
-        setLoading(true); 
 
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -89,7 +88,6 @@ export const AuthProvider = ({ children }) => {
             });
             
             if (error) {
-                setLoading(false);
                 throw error;
             }
             
