@@ -21,6 +21,8 @@ dist-ssr
 # Internal docs & guides (not for public repo)
 PANDUAN_SUPABASE.md
 RPC_SETUP.md
+schema.sql
+supabase_rls_setup.sql
 
 # Editor directories and files
 .vscode/*
