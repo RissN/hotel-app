@@ -441,6 +441,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [jakartaTime, setJakartaTime] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Real-time Jakarta clock
     useEffect(() => {
@@ -503,7 +504,7 @@ export default function Dashboard() {
                     .from('transactions')
                     .select('id, booking_no, guest_name, email, phone, room_no, room_type, number_of_rooms, number_of_persons, arrival_date, departure_date, total_nights, room_rate, subtotal, tax, service_charge, grand_total, payment_method, payment_ref, nationality, company, receptionist, created_at')
                     .order('created_at', { ascending: false })
-                    .limit(5);
+                    .limit(50);
 
                 setRecentActivities(recentResData || []);
 
@@ -608,6 +609,17 @@ export default function Dashboard() {
             )
         }
     ];
+
+    const filteredActivities = recentActivities.filter(activity => {
+        if (!searchTerm) return true;
+        const lowerSearch = searchTerm.toLowerCase();
+        return (
+            (activity.guest_name && activity.guest_name.toLowerCase().includes(lowerSearch)) ||
+            (activity.booking_no && activity.booking_no.toLowerCase().includes(lowerSearch)) ||
+            (activity.room_no && String(activity.room_no).toLowerCase().includes(lowerSearch)) ||
+            (activity.room_type && activity.room_type.toLowerCase().includes(lowerSearch))
+        );
+    });
 
     if (loading) {
         return (
@@ -780,11 +792,27 @@ export default function Dashboard() {
             </div>
 
             {/* ── Aktivitas Terbaru ── */}
-            <div className="mt-12 bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
-                <h2 className="text-xl font-bold text-slate-800 mb-6">Aktivitas Terbaru</h2>
-                {recentActivities && recentActivities.length > 0 ? (
+            <div className="mt-12 bg-slate-50/70 rounded-3xl p-8 shadow-inner border border-slate-200/60 mb-10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                    <h2 className="text-xl font-bold text-slate-800">Aktivitas Terbaru & List Reservasi</h2>
+                    <div className="relative w-full sm:w-72">
+                        <input
+                            type="text"
+                            placeholder="Cari nama, booking no, kamar..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-700"
+                        />
+                        <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                
+                <div className="max-h-[500px] overflow-y-auto pr-2 -mr-2 space-y-3 custom-scrollbar">
+                {filteredActivities && filteredActivities.length > 0 ? (
                     <div className="space-y-3">
-                        {recentActivities.map((activity, idx) => {
+                        {filteredActivities.map((activity, idx) => {
                             const now = new Date();
                             now.setHours(0,0,0,0);
                             const arr = new Date(activity.arrival_date);
@@ -810,7 +838,7 @@ export default function Dashboard() {
                             return (
                             <div
                                 key={idx}
-                                className="flex items-center justify-between border border-slate-100 rounded-2xl px-5 py-4 hover:bg-slate-50 transition-colors"
+                                className="flex items-center justify-between border border-slate-200/60 rounded-2xl px-5 py-4 bg-white hover:bg-slate-50/50 hover:border-slate-300 transition-all shadow-sm hover:shadow"
                             >
                                 {/* Left: Avatar + Info */}
                                 <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -818,8 +846,13 @@ export default function Dashboard() {
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-slate-800 font-bold truncate">{activity.guest_name}</p>
-                                        <div className="text-slate-500 text-sm mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                            <p className="text-slate-800 font-bold truncate">{activity.guest_name}</p>
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                                #{activity.booking_no || '-'}
+                                            </span>
+                                        </div>
+                                        <div className="text-slate-500 text-sm mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                                             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-slate-700 font-medium whitespace-nowrap">
                                                 <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                                                 Kamar {activity.room_no} ({activity.room_type})
@@ -840,7 +873,7 @@ export default function Dashboard() {
                                     {/* Detail Button */}
                                     <button
                                         onClick={() => setSelectedActivity(activity)}
-                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs border border-indigo-200 transition-all hover:shadow-sm active:scale-95 h-[34px]"
+                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50/80 hover:bg-indigo-100/80 text-indigo-700 font-semibold text-xs border border-indigo-200/50 transition-all hover:shadow-sm active:scale-95 h-[34px]"
                                         title="Lihat Detail"
                                     >
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -853,7 +886,7 @@ export default function Dashboard() {
                                     {/* Print Button */}
                                     <button
                                         onClick={() => printTransaction(activity)}
-                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-50 hover:bg-green-100 text-green-700 font-semibold text-xs border border-green-200 transition-all hover:shadow-sm active:scale-95 h-[34px]"
+                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-50/80 hover:bg-green-100/80 text-green-700 font-semibold text-xs border border-green-200/50 transition-all hover:shadow-sm active:scale-95 h-[34px]"
                                         title="Print Confirmation"
                                     >
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -881,9 +914,10 @@ export default function Dashboard() {
                         <svg className="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        <p>Belum ada aktivitas reservasi terbaru.</p>
+                        <p>{searchTerm ? "Tidak ditemukan aktivitas yang cocok dengan pencarian Anda." : "Belum ada aktivitas reservasi terbaru."}</p>
                     </div>
                 )}
+                </div>
             </div>
 
             {/* Detail Modal */}
