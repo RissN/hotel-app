@@ -53,6 +53,19 @@ export const AuthProvider = ({ children }) => {
         };
 
         initializeAuth();
+
+        // Re-fetch role when window regains focus (catches admin role changes in real-time)
+        const handleFocus = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                await fetchUserRole(session.user.id);
+            }
+        };
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
     }, []);
 
     const fetchUserRole = async (userId) => {
