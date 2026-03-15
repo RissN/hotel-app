@@ -32,6 +32,10 @@ const UserManagement = () => {
     const [editUsernameValue, setEditUsernameValue] = useState('');
     const [isActionLoading, setIsActionLoading] = useState(false);
 
+    // Search & Filter state
+    const [searchTerm, setSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState('Semua');
+
     useEffect(() => {
         fetchUsers();
     }, []);
@@ -233,6 +237,24 @@ const UserManagement = () => {
         }
     };
 
+    // Role filter options
+    const roleOptions = ['Semua', ...Array.from(new Set(
+        users.map(u => u.role).filter(Boolean)
+    )).sort()];
+
+    // Filter users by search + role
+    const filteredUsers = users.filter(u => {
+        // Role filter
+        if (roleFilter !== 'Semua' && u.role !== roleFilter) return false;
+        // Text search
+        if (!searchTerm) return true;
+        const lowerSearch = searchTerm.toLowerCase();
+        const displayEmail = (u.email || '').toLowerCase();
+        const displayUsername = (u.username || '').toLowerCase();
+        const displayRole = (u.role || '').toLowerCase();
+        return displayEmail.includes(lowerSearch) || displayUsername.includes(lowerSearch) || displayRole.includes(lowerSearch);
+    });
+
     const stats = {
         total: users.length,
         admin: users.filter(u => u.role === 'Admin' || u.role === 'Superadmin').length,
@@ -303,8 +325,47 @@ const UserManagement = () => {
                 </div>
             </div>
 
-            {/* Main Table */}
+            {/* Search & Filter */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <h3 className="text-lg font-bold text-slate-800">Daftar Akun</h3>
+                        <div className="relative w-full sm:w-72">
+                            <input
+                                type="text"
+                                placeholder="Cari email, nama, role..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-slate-700"
+                            />
+                            <svg className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Role:</span>
+                        {roleOptions.map((r) => (
+                            <button
+                                key={r}
+                                onClick={() => setRoleFilter(r)}
+                                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${
+                                    roleFilter === r
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                                }`}
+                            >
+                                {r}
+                            </button>
+                        ))}
+                        {(roleFilter !== 'Semua' || searchTerm) && (
+                            <span className="text-xs text-slate-400 ml-2">
+                                {filteredUsers.length} dari {users.length} akun
+                            </span>
+                        )}
+                    </div>
+                </div>
+
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -316,18 +377,18 @@ const UserManagement = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {users.length === 0 ? (
+                            {filteredUsers.length === 0 ? (
                                 <tr>
                                     <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
                                         <div className="flex flex-col items-center justify-center">
                                             <svg className="w-12 h-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             <p className="text-lg font-medium text-slate-700">Tidak ada data pengguna</p>
-                                            <p className="text-sm mt-1">Pastikan fungsi Database telah di-setup.</p>
+                                            <p className="text-sm mt-1">{searchTerm || roleFilter !== 'Semua' ? 'Tidak ditemukan pengguna yang cocok dengan filter atau pencarian.' : 'Pastikan fungsi Database telah di-setup.'}</p>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
-                                users.map((u) => {
+                                filteredUsers.map((u) => {
                                     const displayEmail = u.email || 'Email tidak tersedia';
                                     const initial = displayEmail !== 'Email tidak tersedia' ? displayEmail.charAt(0).toUpperCase() : '?';
                                     return (
