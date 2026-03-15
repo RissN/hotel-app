@@ -792,7 +792,7 @@ export default function Dashboard() {
             </div>
 
             {/* ── Aktivitas Terbaru ── */}
-            <div className="mt-12 bg-slate-50/70 rounded-3xl p-8 shadow-inner border border-slate-200/60 mb-10">
+            <div className="mt-12 bg-white rounded-3xl p-8 shadow-md border border-slate-200 mb-10">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                     <h2 className="text-xl font-bold text-slate-800">Aktivitas Terbaru & List Reservasi</h2>
                     <div className="relative w-full sm:w-72">
