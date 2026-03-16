@@ -207,13 +207,13 @@ export default function RegistrationForm() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className={labelClass}>Room No.</label>
-                                        <input type="text" name="roomNo" value={formData.roomNo} onChange={handleChange}
-                                            className={inputClass} placeholder="e.g. 0601" />
+                                        <input type="text" name="roomNo" value={formData.roomNo}
+                                            readOnly className={`${inputClass} bg-slate-100 text-slate-600 cursor-not-allowed`} placeholder="Pilih dari Ketersediaan Kamar" />
                                     </div>
                                     <div>
                                         <label className={labelClass}>No. of Room</label>
-                                        <input type="number" name="numberOfRoom" value={formData.numberOfRoom} onChange={handleChange}
-                                            className={inputClass} min="1" />
+                                        <input type="number" name="numberOfRoom" value={formData.numberOfRoom}
+                                            readOnly className={`${inputClass} bg-slate-100 text-slate-600 cursor-not-allowed`} min="1" />
                                     </div>
                                     <div>
                                         <label className={labelClass}>No. of Person</label>
@@ -228,7 +228,7 @@ export default function RegistrationForm() {
                                                     type="text" 
                                                     value={[...new Set(formData.roomType.split(','))].join(', ')} 
                                                     readOnly 
-                                                    className={`${inputClass} bg-slate-50 text-blue-700 font-bold border-blue-200 cursor-default`}
+                                                    className={`${inputClass} bg-slate-100 text-blue-700 font-bold border-blue-200 cursor-not-allowed`}
                                                 />
                                                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                                     <span className="flex h-2 w-2">
@@ -238,14 +238,8 @@ export default function RegistrationForm() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <select name="roomType" value={formData.roomType} onChange={handleChange} className={inputClass}>
-                                                <option value="">Select…</option>
-                                                {Object.entries(ROOM_PRICES).map(([type, price]) => (
-                                                    <option key={type} value={type}>
-                                                        {type} - {formatIDR(price)}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <input type="text" name="roomType" value={formData.roomType || '-'}
+                                                readOnly className={`${inputClass} bg-slate-100 text-slate-600 cursor-not-allowed`} />
                                         )}
                                     </div>
                                     <div className="col-span-2">
