@@ -3,6 +3,15 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const ROOM_PRICES = {
+    Standard: 1500000,
+    Deluxe: 2500000,
+    Suite: 4000000,
+};
+
+const formatIDR = (amount) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+
 export default function RegistrationForm() {
     const navigate = useNavigate();
     const { username } = useAuth();
@@ -158,9 +167,11 @@ export default function RegistrationForm() {
                                         <label className={labelClass}>Room Type</label>
                                         <select name="roomType" value={formData.roomType} onChange={handleChange} className={inputClass}>
                                             <option value="">Select…</option>
-                                            <option value="Standard">Standard</option>
-                                            <option value="Deluxe">Deluxe</option>
-                                            <option value="Suite">Suite</option>
+                                            {Object.entries(ROOM_PRICES).map(([type, price]) => (
+                                                <option key={type} value={type}>
+                                                    {type} - {formatIDR(price)}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                     <div className="col-span-2">
