@@ -29,7 +29,7 @@ export default function RegistrationForm() {
         email: '',
         memberNo: '',
         safetyDepositBoxNumber: '',
-        issuedBy: '',
+        issuedBy: username || '',
         issuedDate: ''
     });
 
@@ -297,7 +297,8 @@ export default function RegistrationForm() {
                                         <div>
                                             <label className={labelClass}>Dikeluarkan Oleh / Issued By</label>
                                             <input type="text" name="issuedBy" value={formData.issuedBy} onChange={handleChange}
-                                                className={inputClass} />
+                                                readOnly={!!username}
+                                                className={`${inputClass} ${username ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''}`} />
                                         </div>
                                     </div>
                                     <div>
