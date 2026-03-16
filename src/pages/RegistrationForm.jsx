@@ -18,6 +18,7 @@ export default function RegistrationForm() {
     const { username } = useAuth();
     const [showConfirm, setShowConfirm] = useState(false);
     const [navigating, setNavigating] = useState(false);
+    const [validationErrors, setValidationErrors] = useState({});
     const [formData, setFormData] = useState({
         roomNo: '',
         roomType: '',
@@ -68,6 +69,20 @@ export default function RegistrationForm() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        const errors = {};
+        if (!formData.name.trim()) errors.name = 'Nama tamu wajib diisi';
+        if (!formData.arrivalDate) errors.arrivalDate = 'Tanggal check-in wajib diisi';
+        if (!formData.departureDate) errors.departureDate = 'Tanggal check-out wajib diisi';
+        if (formData.arrivalDate && formData.departureDate && formData.departureDate <= formData.arrivalDate) {
+            errors.departureDate = 'Tanggal check-out harus setelah tanggal check-in';
+        }
+        setValidationErrors(errors);
+        if (Object.keys(errors).length > 0) {
+            // Scroll to first error
+            const firstErrorField = document.querySelector('[data-error="true"]');
+            if (firstErrorField) firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
         setShowConfirm(true);
     };
 
@@ -89,7 +104,18 @@ export default function RegistrationForm() {
     };
 
     const inputClass = "w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-3 py-2 bg-white text-sm transition";
+    const inputErrorClass = "w-full rounded-lg border-2 border-red-400 shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-200 px-3 py-2 bg-red-50/50 text-sm transition";
     const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1";
+
+    const ErrorMessage = ({ field }) => {
+        if (!validationErrors[field]) return null;
+        return (
+            <p className="mt-1.5 text-xs font-semibold text-red-500 flex items-center gap-1.5" style={{ animation: 'validationShake 0.4s ease-out' }}>
+                <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                {validationErrors[field]}
+            </p>
+        );
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-100 animate-gradient py-10 px-4 sm:px-6 lg:px-8">
@@ -157,7 +183,19 @@ export default function RegistrationForm() {
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 lg:p-8">
+                <form onSubmit={handleSubmit} noValidate className="p-6 lg:p-8">
+                    {/* Validation Error Banner */}
+                    {Object.keys(validationErrors).length > 0 && (
+                        <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3" style={{ animation: 'validationSlideIn 0.3s ease-out' }}>
+                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                                <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-red-700">Mohon lengkapi data yang diperlukan</p>
+                                <p className="text-xs text-red-500 mt-0.5">Silakan isi semua field yang ditandai merah di bawah ini.</p>
+                            </div>
+                        </div>
+                    )}
                     {/* ── Two-Column Layout ── */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
 
@@ -243,10 +281,11 @@ export default function RegistrationForm() {
 
                                 <div className="space-y-3">
                                     {/* Name */}
-                                    <div>
-                                        <label className={labelClass}>Nama / Name</label>
-                                        <input type="text" name="name" value={formData.name} onChange={handleChange}
-                                            required className={inputClass} />
+                                    <div data-error={!!validationErrors.name}>
+                                        <label className={labelClass}>Nama / Name <span className="text-red-400">*</span></label>
+                                        <input type="text" name="name" value={formData.name} onChange={(e) => { handleChange(e); setValidationErrors(prev => ({ ...prev, name: undefined })); }}
+                                            className={validationErrors.name ? inputErrorClass : inputClass} placeholder="Nama lengkap tamu" />
+                                        <ErrorMessage field="name" />
                                     </div>
 
                                     {/* Profession + Company */}
@@ -328,15 +367,17 @@ export default function RegistrationForm() {
                                             className={inputClass} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className={labelClass}>Arrival Date</label>
-                                            <input type="date" name="arrivalDate" value={formData.arrivalDate} onChange={handleChange}
-                                                required className={inputClass} />
+                                        <div data-error={!!validationErrors.arrivalDate}>
+                                            <label className={labelClass}>Arrival Date <span className="text-red-400">*</span></label>
+                                            <input type="date" name="arrivalDate" value={formData.arrivalDate} onChange={(e) => { handleChange(e); setValidationErrors(prev => ({ ...prev, arrivalDate: undefined })); }}
+                                                className={validationErrors.arrivalDate ? inputErrorClass : inputClass} />
+                                            <ErrorMessage field="arrivalDate" />
                                         </div>
-                                        <div>
-                                            <label className={labelClass}>Departure Date</label>
-                                            <input type="date" name="departureDate" value={formData.departureDate} onChange={handleChange}
-                                                required className={inputClass} />
+                                        <div data-error={!!validationErrors.departureDate}>
+                                            <label className={labelClass}>Departure Date <span className="text-red-400">*</span></label>
+                                            <input type="date" name="departureDate" value={formData.departureDate} onChange={(e) => { handleChange(e); setValidationErrors(prev => ({ ...prev, departureDate: undefined })); }}
+                                                className={validationErrors.departureDate ? inputErrorClass : inputClass} />
+                                            <ErrorMessage field="departureDate" />
                                         </div>
                                     </div>
                                 </div>
@@ -524,6 +565,17 @@ export default function RegistrationForm() {
                 }
                 @keyframes confirmSectionIn {
                     from { opacity: 0; transform: translateY(14px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes validationShake {
+                    0%, 100% { transform: translateX(0); }
+                    20% { transform: translateX(-6px); }
+                    40% { transform: translateX(5px); }
+                    60% { transform: translateX(-3px); }
+                    80% { transform: translateX(2px); }
+                }
+                @keyframes validationSlideIn {
+                    from { opacity: 0; transform: translateY(-10px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
