@@ -148,10 +148,10 @@ export default function RoomAvailability() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+        <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden">
             {/* Main Content Area */}
-            <div className="flex-1 p-6 lg:p-8 overflow-y-auto max-h-screen lg:max-h-none">
-                <header className="mb-8">
+            <div className="flex-1 p-6 lg:p-8 flex flex-col overflow-hidden">
+                <header className="mb-6 shrink-0">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                         <div>
                             <h1 className="text-2xl font-black text-slate-800 tracking-tight">Ketersediaan Kamar</h1>
@@ -178,7 +178,7 @@ export default function RoomAvailability() {
                     </div>
                 </header>
 
-                <div className="space-y-12 pb-4">
+                <div className="space-y-12 pb-4 flex-1">
                     {pagedFloors.map(floor => (
                         <section key={floor} className="relative">
                             <div className="flex items-center gap-4 mb-6">
@@ -292,6 +292,7 @@ export default function RoomAvailability() {
                 </div>
 
                 {/* Pagination Controls */}
+                <div className="mt-auto pt-4 shrink-0">
                 <div className="flex items-center justify-center gap-3 pb-3">
                     <button
                         onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
@@ -334,10 +335,11 @@ export default function RoomAvailability() {
                         Halaman {currentPage + 1} dari {totalPages} — Lantai {pagedFloors.join(' & ')}
                     </p>
                 </div>
+                </div>
             </div>
 
             {/* Right Sidebar - Selection Summary */}
-            <div className="w-full lg:w-80 bg-white border-l border-slate-200 flex flex-col h-screen sticky top-0 bg-opacity-80 backdrop-blur-xl shrink-0">
+            <div className="w-full lg:w-80 bg-white border-l border-slate-200 flex flex-col h-full bg-opacity-80 backdrop-blur-xl shrink-0">
                 <div className="p-6 border-b border-slate-100 bg-slate-50/50">
                     <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
                         <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
