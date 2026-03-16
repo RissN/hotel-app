@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -536,8 +536,8 @@ export default function Dashboard() {
         upcomingReservations: 0
     });
     const [recentActivities, setRecentActivities] = useState([]);
-    const [dailyRevenue, setDailyRevenue] = useState([]);
-    const [monthlyRevenue, setMonthlyRevenue] = useState([]);
+    const [allTransactions, setAllTransactions] = useState([]);
+    const [chartRange, setChartRange] = useState('1bulan');
     const [loading, setLoading] = useState(true);
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [jakartaTime, setJakartaTime] = useState('');
@@ -603,51 +603,7 @@ export default function Dashboard() {
                 .from('transactions')
                 .select('grand_total, created_at');
 
-            const txList = allTx || [];
-
-            // ── Daily revenue (last 30 days) ──
-            const today = new Date();
-            const dailyMap = {};
-            for (let i = 29; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                const key = d.toISOString().slice(0, 10);
-                dailyMap[key] = 0;
-            }
-            txList.forEach((t) => {
-                if (!t.created_at) return;
-                const key = new Date(t.created_at).toISOString().slice(0, 10);
-                if (dailyMap[key] !== undefined) {
-                    dailyMap[key] += (t.grand_total || 0);
-                }
-            });
-            const dailyArr = Object.entries(dailyMap).map(([date, total]) => ({
-                date: new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
-                total,
-            }));
-            setDailyRevenue(dailyArr);
-
-            // ── Monthly revenue (last 12 months) ──
-            const monthlyMap = {};
-            for (let i = 11; i >= 0; i--) {
-                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                monthlyMap[key] = 0;
-            }
-            txList.forEach((t) => {
-                if (!t.created_at) return;
-                const cd = new Date(t.created_at);
-                const key = `${cd.getFullYear()}-${String(cd.getMonth() + 1).padStart(2, '0')}`;
-                if (monthlyMap[key] !== undefined) {
-                    monthlyMap[key] += (t.grand_total || 0);
-                }
-            });
-            const monthlyArr = Object.entries(monthlyMap).map(([month, total]) => {
-                const [y, m] = month.split('-');
-                const label = new Date(Number(y), Number(m) - 1).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
-                return { month: label, total };
-            });
-            setMonthlyRevenue(monthlyArr);
+            setAllTransactions(allTx || []);
 
             setStats({
                 totalReservations: totalReservations || 0,
@@ -803,6 +759,115 @@ export default function Dashboard() {
         }
     ];
 
+    // ── Chart range options ──
+    const CHART_RANGES = [
+        { key: '1hari', label: '1 Hari' },
+        { key: '1bulan', label: '1 Bulan' },
+        { key: '6bulan', label: '6 Bulan' },
+        { key: '1tahun', label: '1 Tahun' },
+    ];
+
+    const chartData = useMemo(() => {
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        if (chartRange === '1hari') {
+            // Hourly breakdown for today (0–23)
+            const hourMap = {};
+            for (let h = 0; h < 24; h++) {
+                hourMap[h] = 0;
+            }
+            const todayStr = new Date().toISOString().slice(0, 10);
+            allTransactions.forEach((t) => {
+                if (!t.created_at) return;
+                const d = new Date(t.created_at);
+                if (d.toISOString().slice(0, 10) === todayStr) {
+                    hourMap[d.getHours()] += (t.grand_total || 0);
+                }
+            });
+            return Object.entries(hourMap).map(([hour, total]) => ({
+                label: `${String(hour).padStart(2, '0')}:00`,
+                total,
+            }));
+        }
+
+        if (chartRange === '1bulan') {
+            // Daily breakdown for last 30 days
+            const dailyMap = {};
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                dailyMap[d.toISOString().slice(0, 10)] = 0;
+            }
+            allTransactions.forEach((t) => {
+                if (!t.created_at) return;
+                const key = new Date(t.created_at).toISOString().slice(0, 10);
+                if (dailyMap[key] !== undefined) {
+                    dailyMap[key] += (t.grand_total || 0);
+                }
+            });
+            return Object.entries(dailyMap).map(([date, total]) => ({
+                label: new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
+                total,
+            }));
+        }
+
+        if (chartRange === '6bulan') {
+            // Monthly breakdown for last 6 months
+            const monthlyMap = {};
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                monthlyMap[key] = 0;
+            }
+            allTransactions.forEach((t) => {
+                if (!t.created_at) return;
+                const cd = new Date(t.created_at);
+                const key = `${cd.getFullYear()}-${String(cd.getMonth() + 1).padStart(2, '0')}`;
+                if (monthlyMap[key] !== undefined) {
+                    monthlyMap[key] += (t.grand_total || 0);
+                }
+            });
+            return Object.entries(monthlyMap).map(([month, total]) => {
+                const [y, m] = month.split('-');
+                return {
+                    label: new Date(Number(y), Number(m) - 1).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
+                    total,
+                };
+            });
+        }
+
+        // '1tahun' — Monthly breakdown for last 12 months
+        const monthlyMap = {};
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            monthlyMap[key] = 0;
+        }
+        allTransactions.forEach((t) => {
+            if (!t.created_at) return;
+            const cd = new Date(t.created_at);
+            const key = `${cd.getFullYear()}-${String(cd.getMonth() + 1).padStart(2, '0')}`;
+            if (monthlyMap[key] !== undefined) {
+                monthlyMap[key] += (t.grand_total || 0);
+            }
+        });
+        return Object.entries(monthlyMap).map(([month, total]) => {
+            const [y, m] = month.split('-');
+            return {
+                label: new Date(Number(y), Number(m) - 1).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
+                total,
+            };
+        });
+    }, [allTransactions, chartRange]);
+
+    const chartSubtitle = {
+        '1hari': 'Pendapatan per jam hari ini',
+        '1bulan': 'Pendapatan harian 30 hari terakhir',
+        '6bulan': 'Pendapatan bulanan 6 bulan terakhir',
+        '1tahun': 'Pendapatan bulanan 12 bulan terakhir',
+    };
+
     // Extract unique room types, splitting comma-separated values for multi-room bookings
     const roomTypes = ['Semua', ...Array.from(new Set(
         recentActivities
@@ -872,37 +937,51 @@ export default function Dashboard() {
                 ))}
             </div>
 
-            {/* ── Revenue Charts ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
-                {/* Daily Revenue Chart */}
+            {/* ── Revenue Chart ── */}
+            <div className="mt-10">
                 <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h2 className="text-lg font-bold text-slate-800">Pendapatan Harian</h2>
-                            <p className="text-slate-400 text-sm mt-0.5">30 hari terakhir</p>
+                            <h2 className="text-lg font-bold text-slate-800">Grafik Pendapatan</h2>
+                            <p className="text-slate-400 text-sm mt-0.5">{chartSubtitle[chartRange]}</p>
                         </div>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
+                        <div className="flex items-center gap-2">
+                            {CHART_RANGES.map((r) => (
+                                <button
+                                    key={r.key}
+                                    onClick={() => setChartRange(r.key)}
+                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${
+                                        chartRange === r.key
+                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200'
+                                            : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                                    }`}
+                                >
+                                    {r.label}
+                                </button>
+                            ))}
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 ml-2">
+                                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                    <div className="h-72">
+                    <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={dailyRevenue} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                            <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                                 <defs>
-                                    <linearGradient id="dailyGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                                 <XAxis
-                                    dataKey="date"
+                                    dataKey="label"
                                     tick={{ fontSize: 11, fill: '#94a3b8' }}
                                     tickLine={false}
                                     axisLine={{ stroke: '#e2e8f0' }}
-                                    interval={Math.max(0, Math.floor(dailyRevenue.length / 7) - 1)}
+                                    interval={chartRange === '1bulan' ? Math.max(0, Math.floor(chartData.length / 7) - 1) : chartRange === '1hari' ? 2 : 0}
                                 />
                                 <YAxis
                                     tick={{ fontSize: 11, fill: '#94a3b8' }}
@@ -927,70 +1006,9 @@ export default function Dashboard() {
                                     dataKey="total"
                                     stroke="#6366f1"
                                     strokeWidth={2.5}
-                                    fill="url(#dailyGrad)"
-                                    dot={false}
+                                    fill="url(#revenueGrad)"
+                                    dot={chartRange !== '1bulan' && chartRange !== '1hari' ? { r: 3, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 } : false}
                                     activeDot={{ r: 5, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Monthly Revenue Chart */}
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="text-lg font-bold text-slate-800">Pendapatan Bulanan</h2>
-                            <p className="text-slate-400 text-sm mt-0.5">12 bulan terakhir</p>
-                        </div>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                        </div>
-                    </div>
-                    <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={monthlyRevenue} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                                <defs>
-                                    <linearGradient id="monthlyGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis
-                                    dataKey="month"
-                                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                                    tickLine={false}
-                                    axisLine={{ stroke: '#e2e8f0' }}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickFormatter={(v) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}jt` : v >= 1_000 ? `${(v / 1_000).toFixed(0)}rb` : v}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        background: '#1e293b',
-                                        border: 'none',
-                                        borderRadius: '12px',
-                                        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-                                        padding: '10px 14px',
-                                    }}
-                                    labelStyle={{ color: '#94a3b8', fontSize: 12, marginBottom: 4 }}
-                                    itemStyle={{ color: '#fff', fontWeight: 700, fontSize: 13 }}
-                                    formatter={(value) => [formatIDR(value), 'Pendapatan']}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="total"
-                                    stroke="#10b981"
-                                    strokeWidth={2.5}
-                                    fill="url(#monthlyGrad)"
-                                    dot={{ r: 3, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
-                                    activeDot={{ r: 5, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
