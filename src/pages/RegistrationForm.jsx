@@ -183,14 +183,31 @@ export default function RegistrationForm() {
                                     </div>
                                     <div>
                                         <label className={labelClass}>Room Type</label>
-                                        <select name="roomType" value={formData.roomType} onChange={handleChange} className={inputClass}>
-                                            <option value="">Select…</option>
-                                            {Object.entries(ROOM_PRICES).map(([type, price]) => (
-                                                <option key={type} value={type}>
-                                                    {type} - {formatIDR(price)}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        {formData.roomType.includes(',') ? (
+                                            <div className="relative">
+                                                <input 
+                                                    type="text" 
+                                                    value={[...new Set(formData.roomType.split(','))].join(', ')} 
+                                                    readOnly 
+                                                    className={`${inputClass} bg-slate-50 text-blue-700 font-bold border-blue-200 cursor-default`}
+                                                />
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    <span className="flex h-2 w-2">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <select name="roomType" value={formData.roomType} onChange={handleChange} className={inputClass}>
+                                                <option value="">Select…</option>
+                                                {Object.entries(ROOM_PRICES).map(([type, price]) => (
+                                                    <option key={type} value={type}>
+                                                        {type} - {formatIDR(price)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
                                     </div>
                                     <div className="col-span-2">
                                         <label className={labelClass}>Receptionist</label>

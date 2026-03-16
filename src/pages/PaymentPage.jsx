@@ -35,7 +35,9 @@ export default function PaymentPage() {
     const [navigatingOut, setNavigatingOut] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
-    const roomRate = ROOM_PRICES[reservationData.roomType] || 0;
+    const typesList = (reservationData.roomType || '').split(',').map(t => t.trim()).filter(Boolean);
+    const totalDailyRate = typesList.reduce((sum, t) => sum + (ROOM_PRICES[t] || 0), 0);
+    const roomRate = typesList.length > 0 ? totalDailyRate / typesList.length : (ROOM_PRICES[reservationData.roomType] || 0);
 
     const totalNights = useMemo(() => {
         if (reservationData.arrivalDate && reservationData.departureDate) {
@@ -416,7 +418,11 @@ export default function PaymentPage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-500">Tipe</span>
-                                <span className="font-medium">{reservationData.roomType || '—'}</span>
+                                <span className="font-medium">
+                                    {reservationData.roomType?.includes(',') 
+                                        ? [...new Set(reservationData.roomType.split(','))].join(', ') 
+                                        : (reservationData.roomType || '—')}
+                                </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-500">Check-in</span>
