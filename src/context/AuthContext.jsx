@@ -112,6 +112,15 @@ export const AuthProvider = ({ children }) => {
             if (data?.user) {
                 setUser(data.user);
                 await fetchUserRole(data.user.id);
+                
+                // Track login history
+                try {
+                    await supabase.from('login_history').insert([
+                        { user_id: data.user.id }
+                    ]);
+                } catch (logErr) {
+                    console.error("Failed to log login history:", logErr);
+                }
             }
             
             return data;

@@ -36,6 +36,13 @@ const UserManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('Semua');
 
+    // User Activity state
+    const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+    const [activityTargetUser, setActivityTargetUser] = useState(null);
+    const [userLogins, setUserLogins] = useState([]);
+    const [userTransactions, setUserTransactions] = useState([]);
+    const [isActivityLoading, setIsActivityLoading] = useState(false);
+
     useEffect(() => {
         fetchUsers();
     }, []);
@@ -237,6 +244,70 @@ const UserManagement = () => {
         }
     };
 
+    // --- ACTIVITY LOGIC ---
+    const openActivityModal = async (user) => {
+        setActivityTargetUser(user);
+        setIsActivityModalOpen(true);
+        setIsActivityLoading(true);
+        
+        try {
+            // 1. Fetch Login History
+            const { data: loginsData, error: loginsError } = await supabase
+                .from('login_history')
+                .select('*')
+                .eq('user_id', user.user_id)
+                .order('login_time', { ascending: false })
+                .limit(10);
+                
+            if (loginsError) throw loginsError;
+            setUserLogins(loginsData || []);
+
+            // 2. Fetch Transaction History based on receptionist name using the user.username or user.email
+            // First we determine the receptionist name used by this account
+            const receptionistName = user.username || user.email;
+            
+            const { data: transactionsData, error: transError } = await supabase
+                .from('transactions')
+                .select('id, booking_no, guest_name, created_at, room_type')
+                .or(`receptionist.ilike.%${receptionistName}%,email.ilike.%${user.email}%`)
+                .order('created_at', { ascending: false })
+                .limit(10);
+                
+            if (transError) throw transError;
+            setUserTransactions(transactionsData || []);
+
+        } catch (err) {
+            console.error("Error fetching user activity:", err);
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal Memuat',
+                message: 'Terjadi kesalahan saat mengambil data aktivitas.',
+                type: 'error'
+            });
+        } finally {
+            setIsActivityLoading(false);
+        }
+    };
+
+    const closeActivityModal = () => {
+        setIsActivityModalOpen(false);
+        setActivityTargetUser(null);
+        setUserLogins([]);
+        setUserTransactions([]);
+    };
+
+    // Helper func for relative time
+    const getRelativeTime = (timestamp) => {
+        const rtf = new Intl.RelativeTimeFormat('id', { numeric: 'auto' });
+        const daysDifference = Math.round((new Date(timestamp) - new Date()) / (1000 * 60 * 60 * 24));
+        const hoursDifference = Math.round((new Date(timestamp) - new Date()) / (1000 * 60 * 60));
+        const minDifference = Math.round((new Date(timestamp) - new Date()) / (1000 * 60));
+
+        if (Math.abs(minDifference) < 60) return rtf.format(minDifference, 'minute');
+        if (Math.abs(hoursDifference) < 24) return rtf.format(hoursDifference, 'hour');
+        return rtf.format(daysDifference, 'day');
+    };
+
     // Role filter options
     const roleOptions = ['Semua', ...Array.from(new Set(
         users.map(u => u.role).filter(Boolean)
@@ -417,9 +488,17 @@ const UserManagement = () => {
                                                 {new Date(u.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2 transition-opacity">
-                                                    <button
-                                                        onClick={() => openEditModal(u)}
+                                                    <div className="flex items-center justify-end gap-2 transition-opacity">
+                                                        <button
+                                                            onClick={() => openActivityModal(u)}
+                                                            className="p-2 rounded-xl border shadow-sm flex items-center gap-2 text-sm font-medium transition-all bg-white text-emerald-600 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50"
+                                                            title="Lihat Aktivitas"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                            <span className="hidden lg:inline">Aktivitas</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openEditModal(u)}
                                                         disabled={u.role === 'Superadmin'}
                                                         className={`p-2 rounded-xl border shadow-sm flex items-center gap-2 text-sm font-medium transition-all ${
                                                             u.role === 'Superadmin' 
@@ -554,6 +633,98 @@ const UserManagement = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* User Activity Modal */}
+            {isActivityModalOpen && createPortal(
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeActivityModal} style={{ animation: 'umOverlayIn 0.3s ease-out' }}></div>
+                    <div className="relative bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] shadow-2xl overflow-hidden flex flex-col" style={{ animation: 'umModalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                        {/* Header */}
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-800">Histori & Aktivitas Akun</h3>
+                                <p className="text-sm text-slate-500 mt-1">{activityTargetUser?.username || activityTargetUser?.email}</p>
+                            </div>
+                            <button onClick={closeActivityModal} className="text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-100 p-2 rounded-full transition-colors border shadow-sm">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30">
+                            {isActivityLoading ? (
+                                <div className="flex flex-col items-center justify-center h-48 space-y-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                                    <p className="text-sm text-slate-500">Memuat data aktivitas...</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-8">
+                                    {/* Login History Section */}
+                                    <div>
+                                        <h4 className="text-sm font-bold uppercase tracking-widest text-indigo-600 mb-4 flex items-center gap-2 border-b border-indigo-100 pb-2">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                                            Histori Login Terakhir
+                                        </h4>
+                                        {userLogins.length === 0 ? (
+                                            <p className="text-sm text-slate-500 italic px-2">Belum ada catatan login.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {userLogins.map((lg) => (
+                                                    <div key={lg.id} className="bg-white px-4 py-3 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-bold text-slate-800">Berhasil Login</p>
+                                                                <p className="text-xs text-slate-500">{new Date(lg.login_time).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
+                                                            {getRelativeTime(lg.login_time)}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Transaction History Section */}
+                                    <div>
+                                        <h4 className="text-sm font-bold uppercase tracking-widest text-purple-600 mb-4 flex items-center gap-2 border-b border-purple-100 pb-2">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                                            Aktivitas Reservasi
+                                        </h4>
+                                        {userTransactions.length === 0 ? (
+                                            <p className="text-sm text-slate-500 italic px-2">Belum ada aktivitas reservasi yang dicatat oleh akun ini.</p>
+                                        ) : (
+                                            <div className="relative border-l-2 border-slate-200 ml-3 space-y-6">
+                                                {userTransactions.map((tx) => (
+                                                    <div key={tx.id} className="relative pl-6">
+                                                        <div className="absolute w-3.5 h-3.5 bg-purple-500 rounded-full border-2 border-white -left-[9px] top-1"></div>
+                                                        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                                            <div className="flex justify-between items-start mb-1">
+                                                                <p className="text-sm font-bold text-slate-800">Reservasi Kamar {tx.room_type || ''}</p>
+                                                                <span className="text-xs font-medium text-slate-400 whitespace-nowrap ml-2">
+                                                                    {getRelativeTime(tx.created_at)}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-sm text-slate-500">
+                                                                Mencatat reservasi untuk tamu <span className="font-semibold text-slate-700">{tx.guest_name}</span> (Ref: <span className="font-mono text-xs">{tx.booking_no}</span>)
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>,
                 document.body
