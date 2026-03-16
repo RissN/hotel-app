@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import CustomAlert from '../components/CustomAlert';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, Area, AreaChart
@@ -268,8 +269,15 @@ function printTransaction(tx) {
     }, 500);
 }
 
-function DetailModal({ activity, onClose, onPrint }) {
+function DetailModal({ activity, onClose, onPrint, onCheckout, onCancel, isCheckingOut }) {
     if (!activity) return null;
+
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    const arr = new Date(activity.arrival_date);
+    const dep = new Date(activity.departure_date);
+    const isAktif = now >= arr && now < dep;
+    const isUpcoming = now < arr;
 
     const fmt = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
     const payLabel = PAYMENT_METHOD_LABEL[activity.payment_method] || activity.payment_method || '-';
@@ -458,6 +466,29 @@ function DetailModal({ activity, onClose, onPrint }) {
                         </svg>
                         Print Confirmation
                     </button>
+                    {isAktif && (
+                        <button
+                            onClick={() => onCheckout(activity.id)}
+                            disabled={isCheckingOut}
+                            className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold shadow-md hover:shadow-lg transition-all text-sm flex items-center gap-2 disabled:opacity-50"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            {isCheckingOut ? 'Memproses...' : 'Check Out Sekarang'}
+                        </button>
+                    )}
+                    {isUpcoming && (
+                        <button
+                            onClick={() => onCancel(activity.id)}
+                            className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold shadow-md hover:shadow-lg transition-all text-sm flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Cancel Reservasi
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -510,6 +541,123 @@ export default function Dashboard() {
     const [jakartaTime, setJakartaTime] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [roomTypeFilter, setRoomTypeFilter] = useState('Semua');
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ 
+        isOpen: false, 
+        title: '', 
+        message: '', 
+        type: 'info',
+        onConfirm: null 
+    });
+
+    // Fetch dashboard stats func
+    const fetchDashboardData = async () => {
+        setLoading(true);
+        try {
+            const { count: totalReservations } = await supabase
+                .from('transactions')
+                .select('*', { count: 'exact', head: true });
+
+            const { data: allDates } = await supabase
+                .from('transactions')
+                .select('arrival_date, departure_date');
+            
+            let activeCount = 0;
+            let completedCount = 0;
+            let upcomingCount = 0;
+            
+            if (allDates) {
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                allDates.forEach(t => {
+                    const arrival = new Date(t.arrival_date);
+                    arrival.setHours(0,0,0,0);
+                    const departure = new Date(t.departure_date);
+                    departure.setHours(0,0,0,0);
+                    
+                    if (today >= arrival && today < departure) {
+                        activeCount++;
+                    } else if (today >= departure) {
+                        completedCount++;
+                    } else {
+                        upcomingCount++;
+                    }
+                });
+            }
+
+
+            const { data: recentResData } = await supabase
+                .from('transactions')
+                .select('id, booking_no, guest_name, email, phone, room_no, room_type, number_of_rooms, number_of_persons, arrival_date, departure_date, total_nights, room_rate, subtotal, tax, service_charge, grand_total, payment_method, payment_ref, nationality, company, receptionist, notes, created_at')
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            setRecentActivities(recentResData || []);
+
+            // ── Fetch ALL transactions for revenue charts ──
+            const { data: allTx } = await supabase
+                .from('transactions')
+                .select('grand_total, created_at');
+
+            const txList = allTx || [];
+
+            // ── Daily revenue (last 30 days) ──
+            const today = new Date();
+            const dailyMap = {};
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().slice(0, 10);
+                dailyMap[key] = 0;
+            }
+            txList.forEach((t) => {
+                if (!t.created_at) return;
+                const key = new Date(t.created_at).toISOString().slice(0, 10);
+                if (dailyMap[key] !== undefined) {
+                    dailyMap[key] += (t.grand_total || 0);
+                }
+            });
+            const dailyArr = Object.entries(dailyMap).map(([date, total]) => ({
+                date: new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
+                total,
+            }));
+            setDailyRevenue(dailyArr);
+
+            // ── Monthly revenue (last 12 months) ──
+            const monthlyMap = {};
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                monthlyMap[key] = 0;
+            }
+            txList.forEach((t) => {
+                if (!t.created_at) return;
+                const cd = new Date(t.created_at);
+                const key = `${cd.getFullYear()}-${String(cd.getMonth() + 1).padStart(2, '0')}`;
+                if (monthlyMap[key] !== undefined) {
+                    monthlyMap[key] += (t.grand_total || 0);
+                }
+            });
+            const monthlyArr = Object.entries(monthlyMap).map(([month, total]) => {
+                const [y, m] = month.split('-');
+                const label = new Date(Number(y), Number(m) - 1).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                return { month: label, total };
+            });
+            setMonthlyRevenue(monthlyArr);
+
+            setStats({
+                totalReservations: totalReservations || 0,
+                activeReservations: activeCount,
+                completedReservations: completedCount,
+                upcomingReservations: upcomingCount
+            });
+        } catch (error) {
+            console.error('Error fetching dashboard stats:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Real-time Jakarta clock
     useEffect(() => {
@@ -533,115 +681,89 @@ export default function Dashboard() {
     }, []);
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const { count: totalReservations } = await supabase
-                    .from('transactions')
-                    .select('*', { count: 'exact', head: true });
+        fetchDashboardData();
+    }, []);
 
-                const { data: allDates } = await supabase
-                    .from('transactions')
-                    .select('arrival_date, departure_date');
-                
-                let activeCount = 0;
-                let completedCount = 0;
-                let upcomingCount = 0;
-                
-                if (allDates) {
-                    const today = new Date();
-                    today.setHours(0,0,0,0);
+    const handleCheckout = async (id) => {
+        setAlertConfig({
+            isOpen: true,
+            title: 'Konfirmasi Check-out',
+            message: 'Apakah tamu ini ingin check-out sekarang? Tanggal departure akan diperbarui ke hari ini.',
+            type: 'confirm',
+            onConfirm: async () => {
+                setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                setIsCheckingOut(true);
+                try {
+                    const todayDate = new Date().toISOString().split('T')[0];
+                    const { error } = await supabase
+                        .from('transactions')
+                        .update({ departure_date: todayDate })
+                        .eq('id', id);
+
+                    if (error) throw error;
                     
-                    allDates.forEach(t => {
-                        const arrival = new Date(t.arrival_date);
-                        arrival.setHours(0,0,0,0);
-                        const departure = new Date(t.departure_date);
-                        departure.setHours(0,0,0,0);
-                        
-                        if (today >= arrival && today < departure) {
-                            activeCount++;
-                        } else if (today >= departure) {
-                            completedCount++;
-                        } else {
-                            upcomingCount++;
-                        }
+                    // Re-fetch data to update UI
+                    await fetchDashboardData();
+                    setSelectedActivity(null);
+                    
+                    setAlertConfig({
+                        isOpen: true,
+                        title: 'Berhasil',
+                        message: 'Check-out berhasil dilakukan!',
+                        type: 'success'
+                    });
+                } catch (error) {
+                    console.error('Error checking out:', error);
+                    setAlertConfig({
+                        isOpen: true,
+                        title: 'Kesalahan',
+                        message: 'Gagal melakukan check-out: ' + error.message,
+                        type: 'error'
+                    });
+                } finally {
+                    setIsCheckingOut(false);
+                }
+            }
+        });
+    };
+
+    const handleCancel = async (id) => {
+        setAlertConfig({
+            isOpen: true,
+            title: 'Konfirmasi Pembatalan',
+            message: 'Apakah Anda yakin ingin membatalkan reservasi ini? Data akan dihapus permanen dari sistem.',
+            type: 'confirm',
+            onConfirm: async () => {
+                setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                try {
+                    const { error } = await supabase
+                        .from('transactions')
+                        .delete()
+                        .eq('id', id);
+
+                    if (error) throw error;
+                    
+                    await fetchDashboardData();
+                    setSelectedActivity(null);
+                    
+                    setAlertConfig({
+                        isOpen: true,
+                        title: 'Berhasil',
+                        message: 'Reservasi berhasil dibatalkan.',
+                        type: 'success'
+                    });
+                } catch (error) {
+                    console.error('Error canceling reservation:', error);
+                    setAlertConfig({
+                        isOpen: true,
+                        title: 'Kesalahan',
+                        message: 'Gagal membatalkan reservasi: ' + error.message,
+                        type: 'error'
                     });
                 }
-
-
-                const { data: recentResData } = await supabase
-                    .from('transactions')
-                    .select('id, booking_no, guest_name, email, phone, room_no, room_type, number_of_rooms, number_of_persons, arrival_date, departure_date, total_nights, room_rate, subtotal, tax, service_charge, grand_total, payment_method, payment_ref, nationality, company, receptionist, notes, created_at')
-                    .order('created_at', { ascending: false })
-                    .limit(50);
-
-                setRecentActivities(recentResData || []);
-
-                // ── Fetch ALL transactions for revenue charts ──
-                const { data: allTx } = await supabase
-                    .from('transactions')
-                    .select('grand_total, created_at');
-
-                const txList = allTx || [];
-
-                // ── Daily revenue (last 30 days) ──
-                const today = new Date();
-                const dailyMap = {};
-                for (let i = 29; i >= 0; i--) {
-                    const d = new Date(today);
-                    d.setDate(d.getDate() - i);
-                    const key = d.toISOString().slice(0, 10);
-                    dailyMap[key] = 0;
-                }
-                txList.forEach((t) => {
-                    if (!t.created_at) return;
-                    const key = new Date(t.created_at).toISOString().slice(0, 10);
-                    if (dailyMap[key] !== undefined) {
-                        dailyMap[key] += (t.grand_total || 0);
-                    }
-                });
-                const dailyArr = Object.entries(dailyMap).map(([date, total]) => ({
-                    date: new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
-                    total,
-                }));
-                setDailyRevenue(dailyArr);
-
-                // ── Monthly revenue (last 12 months) ──
-                const monthlyMap = {};
-                for (let i = 11; i >= 0; i--) {
-                    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                    monthlyMap[key] = 0;
-                }
-                txList.forEach((t) => {
-                    if (!t.created_at) return;
-                    const cd = new Date(t.created_at);
-                    const key = `${cd.getFullYear()}-${String(cd.getMonth() + 1).padStart(2, '0')}`;
-                    if (monthlyMap[key] !== undefined) {
-                        monthlyMap[key] += (t.grand_total || 0);
-                    }
-                });
-                const monthlyArr = Object.entries(monthlyMap).map(([month, total]) => {
-                    const [y, m] = month.split('-');
-                    const label = new Date(Number(y), Number(m) - 1).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
-                    return { month: label, total };
-                });
-                setMonthlyRevenue(monthlyArr);
-
-                setStats({
-                    totalReservations: totalReservations || 0,
-                    activeReservations: activeCount,
-                    completedReservations: completedCount,
-                    upcomingReservations: upcomingCount
-                });
-            } catch (error) {
-                console.error('Error fetching dashboard stats:', error);
-            } finally {
-                setLoading(false);
             }
-        };
-
-        fetchStats();
-    }, []);
+        });
+    };
 
     const cards = [
         {
@@ -998,6 +1120,35 @@ export default function Dashboard() {
                                         Print
                                     </button>
 
+                                    {/* Checkout Button - Only for Active */}
+                                    {badgeText === 'Aktif' && (
+                                        <button
+                                            onClick={() => handleCheckout(activity.id)}
+                                            disabled={isCheckingOut}
+                                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50/80 hover:bg-amber-100/80 text-amber-700 font-semibold text-xs border border-amber-200/50 transition-all hover:shadow-sm active:scale-95 h-[34px] disabled:opacity-50"
+                                            title="Check Out Sekarang"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            Check Out
+                                        </button>
+                                    )}
+
+                                    {/* Cancel Button - Only for Upcoming */}
+                                    {badgeText === 'Akan Datang' && (
+                                        <button
+                                            onClick={() => handleCancel(activity.id)}
+                                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50/80 hover:bg-red-100/80 text-red-700 font-semibold text-xs border border-red-200/50 transition-all hover:shadow-sm active:scale-95 h-[34px]"
+                                            title="Cancel Reservasi"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            Cancel
+                                        </button>
+                                    )}
+
                                     {/* Status Badge — dinamis */}
                                     <div className="flex flex-col items-center justify-center border-l border-slate-100 pl-3 min-w-[90px]">
                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold leading-none border shadow-sm whitespace-nowrap mb-1 ${badgeClass}`}>
@@ -1029,8 +1180,21 @@ export default function Dashboard() {
                     activity={selectedActivity}
                     onClose={() => setSelectedActivity(null)}
                     onPrint={printTransaction}
+                    onCheckout={handleCheckout}
+                    onCancel={handleCancel}
+                    isCheckingOut={isCheckingOut}
                 />
             )}
+
+            {/* Custom Alert */}
+            <CustomAlert
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={alertConfig.onConfirm}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
         </div>
     );
 }
