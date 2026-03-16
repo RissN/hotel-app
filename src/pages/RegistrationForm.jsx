@@ -40,7 +40,8 @@ export default function RegistrationForm() {
         memberNo: '',
         safetyDepositBoxNumber: '',
         issuedBy: username || '',
-        issuedDate: ''
+        issuedDate: '',
+        additionalNotes: ''
     });
 
     // Capture search params for room number and type
@@ -214,6 +215,17 @@ export default function RegistrationForm() {
                                         <input type="text" name="receptionist" value={formData.receptionist} onChange={handleChange}
                                             readOnly={!!username}
                                             className={`${inputClass} ${username ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''}`} />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className={labelClass}>Catatan Tambahan / Additional Notes (Optional)</label>
+                                        <textarea 
+                                            name="additionalNotes" 
+                                            value={formData.additionalNotes} 
+                                            onChange={handleChange}
+                                            rows="3"
+                                            className={`${inputClass} resize-none`}
+                                            placeholder="Contoh: Permintaan khusus, alergi, atau catatan lainnya..."
+                                        ></textarea>
                                     </div>
                                     <div className="col-span-2">
                                         <div className="bg-white border border-blue-200 rounded-lg px-4 py-2 text-center">
@@ -429,6 +441,12 @@ export default function RegistrationForm() {
                                     <div className="flex justify-between"><span className="text-gray-500">Tipe Kamar</span><span className="font-medium text-gray-800">{formData.roomType || '-'}</span></div>
                                     <div className="flex justify-between"><span className="text-gray-500">Jumlah Kamar</span><span className="font-medium text-gray-800">{formData.numberOfRoom || '-'}</span></div>
                                     <div className="flex justify-between"><span className="text-gray-500">Jumlah Tamu</span><span className="font-medium text-gray-800">{formData.numberOfPerson || '-'}</span></div>
+                                    {formData.additionalNotes && (
+                                        <div className="mt-2 pt-2 border-t border-slate-200">
+                                            <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Catatan Tambahan</span>
+                                            <p className="text-xs text-slate-600 italic leading-relaxed">"{formData.additionalNotes}"</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

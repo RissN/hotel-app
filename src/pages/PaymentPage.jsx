@@ -112,7 +112,8 @@ export default function PaymentPage() {
                 payment_ref: selectedMethod === 'cash' ? '' : `JSON:${JSON.stringify(paymentData)}`,
                 nationality: reservationData.nationality,
                 company: reservationData.company,
-                receptionist: reservationData.receptionist
+                receptionist: reservationData.receptionist,
+                notes: reservationData.additionalNotes || ''
             };
 
             const { error } = await supabase

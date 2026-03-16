@@ -420,6 +420,19 @@ function DetailModal({ activity, onClose, onPrint }) {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Section: Notes */}
+                        {activity.notes && (
+                            <div className="mt-4 pt-4 border-t border-slate-100" style={{ animation: 'detailSectionIn 0.4s ease-out 0.5s both' }}>
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-2 flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    Catatan Tambahan
+                                </h4>
+                                <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100/50">
+                                    <p className="text-sm text-amber-900 italic leading-relaxed font-medium">"{activity.notes}"</p>
+                                </div>
+                            </div>
+                        )}
                     </section>
 
                     {/* Dibuat pada */}
@@ -557,7 +570,7 @@ export default function Dashboard() {
 
                 const { data: recentResData } = await supabase
                     .from('transactions')
-                    .select('id, booking_no, guest_name, email, phone, room_no, room_type, number_of_rooms, number_of_persons, arrival_date, departure_date, total_nights, room_rate, subtotal, tax, service_charge, grand_total, payment_method, payment_ref, nationality, company, receptionist, created_at')
+                    .select('id, booking_no, guest_name, email, phone, room_no, room_type, number_of_rooms, number_of_persons, arrival_date, departure_date, total_nights, room_rate, subtotal, tax, service_charge, grand_total, payment_method, payment_ref, nationality, company, receptionist, notes, created_at')
                     .order('created_at', { ascending: false })
                     .limit(50);
 
