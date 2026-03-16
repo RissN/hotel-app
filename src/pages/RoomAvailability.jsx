@@ -5,11 +5,15 @@ import { supabase } from '../supabaseClient';
 export default function RoomAvailability() {
     const navigate = useNavigate();
     const [occupiedRooms, setOccupiedRooms] = useState({});
+    const [upcomingRooms, setUpcomingRooms] = useState({});
     const [selectedRooms, setSelectedRooms] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(0);
 
     const floors = [5, 4, 3, 2, 1]; // Top floor first
     const roomsPerFloor = 20;
+    const floorsPerPage = 2;
+    const totalPages = Math.ceil(floors.length / floorsPerPage);
 
     const toggleRoomSelection = (roomNo, type) => {
         setSelectedRooms(prev => {
@@ -38,17 +42,16 @@ export default function RoomAvailability() {
             
             // Fetch transactions that are currently active
             // arrival_date <= today AND departure_date > today
-            const { data, error } = await supabase
+            const { data: activeData, error: activeError } = await supabase
                 .from('transactions')
                 .select('room_no, guest_name, arrival_date, departure_date')
                 .lte('arrival_date', today)
                 .gt('departure_date', today);
 
-            if (error) throw error;
+            if (activeError) throw activeError;
 
             const occupancyMap = {};
-            data.forEach(tx => {
-                // Split multi-room strings like "101, 102"
+            activeData.forEach(tx => {
                 const roomNos = tx.room_no.split(',').map(n => n.trim());
                 roomNos.forEach(roomNo => {
                     occupancyMap[roomNo] = {
@@ -59,6 +62,30 @@ export default function RoomAvailability() {
                 });
             });
             setOccupiedRooms(occupancyMap);
+
+            // Fetch upcoming reservations (arrival_date > today)
+            const { data: upcomingData, error: upcomingError } = await supabase
+                .from('transactions')
+                .select('room_no, guest_name, arrival_date, departure_date')
+                .gt('arrival_date', today);
+
+            if (upcomingError) throw upcomingError;
+
+            const upcomingMap = {};
+            upcomingData.forEach(tx => {
+                const roomNos = tx.room_no.split(',').map(n => n.trim());
+                roomNos.forEach(roomNo => {
+                    // If multiple upcoming, keep the nearest one
+                    if (!upcomingMap[roomNo] || new Date(tx.arrival_date) < new Date(upcomingMap[roomNo].arrival)) {
+                        upcomingMap[roomNo] = {
+                            guestName: tx.guest_name,
+                            arrival: tx.arrival_date,
+                            departure: tx.departure_date
+                        };
+                    }
+                });
+            });
+            setUpcomingRooms(upcomingMap);
         } catch (error) {
             console.error('Error fetching room occupancy:', error);
         } finally {
@@ -98,6 +125,14 @@ export default function RoomAvailability() {
         return { name: 'Suite', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' };
     };
 
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    };
+
+    // Pagination
+    const pagedFloors = floors.slice(currentPage * floorsPerPage, (currentPage + 1) * floorsPerPage);
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh] text-slate-500">
@@ -128,6 +163,10 @@ export default function RoomAvailability() {
                                 <span className="text-xs font-bold text-slate-600">Terisi</span>
                             </div>
                             <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]"></div>
+                                <span className="text-xs font-bold text-slate-600">Akan Datang</span>
+                            </div>
+                            <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-white border border-slate-300"></div>
                                 <span className="text-xs font-bold text-slate-600">Tersedia</span>
                             </div>
@@ -139,8 +178,8 @@ export default function RoomAvailability() {
                     </div>
                 </header>
 
-                <div className="space-y-12 pb-12">
-                    {floors.map(floor => (
+                <div className="space-y-12 pb-4">
+                    {pagedFloors.map(floor => (
                         <section key={floor} className="relative">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="bg-slate-900 text-white w-12 h-12 rounded-xl flex flex-col items-center justify-center shadow-lg transform -rotate-3">
@@ -154,8 +193,10 @@ export default function RoomAvailability() {
                             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-10 gap-3">
                                 {Array.from({ length: roomsPerFloor }).map((_, i) => {
                                     const roomNo = getRoomNumber(floor, i);
-                                    const status = occupiedRooms[roomNo];
-                                    const isOccupied = !!status;
+                                    const activeStatus = occupiedRooms[roomNo];
+                                    const upcomingStatus = upcomingRooms[roomNo];
+                                    const isOccupied = !!activeStatus;
+                                    const isUpcoming = !isOccupied && !!upcomingStatus;
                                     const isSelected = selectedRooms.find(r => r.no === roomNo);
                                     const category = getRoomCategory(i);
 
@@ -168,7 +209,9 @@ export default function RoomAvailability() {
                                                 ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-[0_4px_12px_rgba(244,63,94,0.08)]' 
                                                 : isSelected
                                                     ? 'bg-indigo-600 border-indigo-700 text-white shadow-lg shadow-indigo-500/40 ring-2 ring-indigo-400 ring-offset-2'
-                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/10'
+                                                    : isUpcoming
+                                                        ? 'bg-sky-50 border-sky-200 text-sky-700 shadow-[0_4px_12px_rgba(14,165,233,0.08)]'
+                                                        : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/10'
                                             } border rounded-xl p-3 shadow-sm flex flex-col items-center justify-center gap-1 h-24 overflow-hidden`}
                                         >
                                             <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase border tracking-tighter ${
@@ -178,7 +221,7 @@ export default function RoomAvailability() {
                                             </div>
 
                                             <span className={`text-sm font-black tracking-tight mt-2 ${
-                                                isOccupied ? 'text-rose-600' : isSelected ? 'text-white' : 'text-slate-600'
+                                                isOccupied ? 'text-rose-600' : isSelected ? 'text-white' : isUpcoming ? 'text-sky-600' : 'text-slate-600'
                                             }`}>
                                                 {roomNo}
                                             </span>
@@ -192,13 +235,24 @@ export default function RoomAvailability() {
                                                         </span>
                                                     </div>
                                                     <span className="text-[10px] font-bold truncate w-full text-center px-1 opacity-90 uppercase tracking-tighter text-rose-800">
-                                                        {status.guestName}
+                                                        {activeStatus.guestName}
                                                     </span>
                                                 </>
                                             ) : isSelected ? (
                                                 <div className="bg-white/20 rounded-full px-2 py-0.5 mt-1">
                                                     <span className="text-[8px] font-black uppercase tracking-widest text-white">Terpilih</span>
                                                 </div>
+                                            ) : isUpcoming ? (
+                                                <>
+                                                    <div className="absolute top-2 right-2">
+                                                        <span className="flex h-2 w-2">
+                                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400"></span>
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[9px] font-bold truncate w-full text-center px-1 text-sky-600">
+                                                        {formatDate(upcomingStatus.arrival)}
+                                                    </span>
+                                                </>
                                             ) : (
                                                 <span className="text-[10px] uppercase font-bold tracking-widest opacity-20">Vakant</span>
                                             )}
@@ -207,10 +261,20 @@ export default function RoomAvailability() {
                                                 <p className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest mb-1">{category.name}</p>
                                                 {isOccupied ? (
                                                     <>
-                                                        <p className="font-bold border-b border-white/20 pb-1 mb-1.5 w-full text-center truncate">{status.guestName}</p>
+                                                        <p className="font-bold border-b border-white/20 pb-1 mb-1.5 w-full text-center truncate">{activeStatus.guestName}</p>
                                                         <div className="space-y-0.5 opacity-80 text-center">
-                                                            <p>In: {status.arrival}</p>
-                                                            <p>Out: {status.departure}</p>
+                                                            <p className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-400 inline-block"></span> Terisi</p>
+                                                            <p>In: {activeStatus.arrival}</p>
+                                                            <p>Out: {activeStatus.departure}</p>
+                                                        </div>
+                                                    </>
+                                                ) : isUpcoming ? (
+                                                    <>
+                                                        <p className="font-bold border-b border-white/20 pb-1 mb-1.5 w-full text-center truncate">{upcomingStatus.guestName}</p>
+                                                        <div className="space-y-0.5 opacity-80 text-center">
+                                                            <p className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span> Akan Datang</p>
+                                                            <p>In: {formatDate(upcomingStatus.arrival)}</p>
+                                                            <p>Out: {formatDate(upcomingStatus.departure)}</p>
                                                         </div>
                                                     </>
                                                 ) : isSelected ? (
@@ -225,6 +289,50 @@ export default function RoomAvailability() {
                             </div>
                         </section>
                     ))}
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-center gap-3 pb-3">
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                        disabled={currentPage === 0}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                        Sebelumnya
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                        {Array.from({ length: totalPages }).map((_, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentPage(idx)}
+                                className={`w-10 h-10 rounded-xl font-black text-sm transition-all duration-200 ${
+                                    currentPage === idx 
+                                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 scale-110' 
+                                        : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300'
+                                }`}
+                            >
+                                {idx + 1}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                        disabled={currentPage === totalPages - 1}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-white"
+                    >
+                        Selanjutnya
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                </div>
+
+                {/* Page Info */}
+                <div className="text-center pb-4">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        Halaman {currentPage + 1} dari {totalPages} — Lantai {pagedFloors.join(' & ')}
+                    </p>
                 </div>
             </div>
 
