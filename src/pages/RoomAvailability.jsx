@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 export default function RoomAvailability() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [occupiedRooms, setOccupiedRooms] = useState({});
     const [upcomingRooms, setUpcomingRooms] = useState({});
     const [selectedRooms, setSelectedRooms] = useState([]);
@@ -111,7 +112,7 @@ export default function RoomAvailability() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [location.key]);
 
     const getRoomNumber = (floor, index) => {
         const sequence = (index + 1).toString().padStart(2, '0');

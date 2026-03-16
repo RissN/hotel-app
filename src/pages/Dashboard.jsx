@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import CustomAlert from '../components/CustomAlert';
@@ -527,6 +528,7 @@ function DetailModal({ activity, onClose, onPrint, onCheckout, onCancel, isCheck
 // ─── Dashboard ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
     const { role } = useAuth();
+    const location = useLocation();
     const [stats, setStats] = useState({
         totalReservations: 0,
         activeReservations: 0,
@@ -683,7 +685,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchDashboardData();
-    }, []);
+    }, [location.key]);
 
     const handleCheckout = async (id) => {
         setAlertConfig({
