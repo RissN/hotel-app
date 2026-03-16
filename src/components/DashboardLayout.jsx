@@ -15,15 +15,12 @@ const DashboardLayout = () => {
         setShowLogoutConfirm(false);
         setLoggingOut(true);
 
-        // Wait for animation, then logout and navigate
-        setTimeout(async () => {
-            try {
-                await logout();
-                navigate('/login');
-            } catch (error) {
-                console.error('Logout failed:', error);
-                setLoggingOut(false);
-            }
+        // Wait for animation, then navigate immediately so it doesn't get stuck
+        setTimeout(() => {
+            // Call logout but do not wait for the network request to finish
+            logout().catch(err => console.error('Logout error:', err));
+            // Instantly redirect
+            window.location.replace('/login');
         }, 1800);
     };
 

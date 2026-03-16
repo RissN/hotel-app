@@ -15,6 +15,14 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!email.trim() || !password.trim()) {
+            setError('Harap isi email dan password Anda untuk masuk');
+            setShakeError(true);
+            setTimeout(() => setShakeError(false), 600);
+            return;
+        }
+
         setError('');
         setShakeError(false);
         setLoading(true);
@@ -142,7 +150,6 @@ const Login = () => {
                         </label>
                         <input
                             type="email"
-                            required
                             value={email}
                             onChange={(e) => { setEmail(e.target.value); setError(''); }}
                             className={`w-full px-4 py-3 rounded-xl border transition-all outline-none bg-white/50 ${
@@ -159,7 +166,6 @@ const Login = () => {
                         </label>
                         <input
                             type="password"
-                            required
                             value={password}
                             onChange={(e) => { setPassword(e.target.value); setError(''); }}
                             className={`w-full px-4 py-3 rounded-xl border transition-all outline-none bg-white/50 ${
