@@ -90,7 +90,8 @@ export default function RegistrationForm() {
         setShowConfirm(false);
         setNavigating(true);
         setTimeout(() => {
-            navigate('/payment', { state: { reservationData: formData } });
+            sessionStorage.setItem('reservationData', JSON.stringify(formData));
+            window.location.href = '/payment';
         }, 1200);
     };
 

@@ -54,9 +54,10 @@ const maskPhoneNumber = (phone) => {
 export default function PaymentSuccess() {
     const location = useLocation();
     const navigate = useNavigate();
-    const reservationData = location.state?.reservationData || {};
-    const paymentData = location.state?.paymentData || {};
-    const bookingNo = location.state?.bookingNo || '------';
+    const successData = location.state || JSON.parse(sessionStorage.getItem('paymentSuccessData') || '{}');
+    const reservationData = successData.reservationData || {};
+    const paymentData = successData.paymentData || {};
+    const bookingNo = successData.bookingNo || '------';
 
     const totalNights = useMemo(() => {
         if (reservationData.arrivalDate && reservationData.departureDate) {
@@ -151,7 +152,7 @@ export default function PaymentSuccess() {
                 {/* Action Buttons */}
                 <div className="max-w-3xl mx-auto flex justify-center gap-4 mb-8">
                     <button
-                        onClick={() => navigate('/registration')}
+                        onClick={() => window.location.href = '/rooms'}
                         className="px-6 py-3 rounded-xl border border-gray-300 text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200 text-sm"
                     >
                         ← Kembali ke Beranda

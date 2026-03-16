@@ -22,7 +22,7 @@ const formatIDR = (amount) =>
 export default function PaymentPage() {
     const location = useLocation();
     const navigate = useNavigate();
-    const reservationData = location.state?.reservationData || {};
+    const reservationData = location.state?.reservationData || JSON.parse(sessionStorage.getItem('reservationData') || '{}');
 
     const [selectedMethod, setSelectedMethod] = useState('cash');
     const [cardNumber, setCardNumber] = useState('');
@@ -136,7 +136,8 @@ export default function PaymentPage() {
             setIsProcessing(false);
             setNavigatingOut(true);
             setTimeout(() => {
-                navigate('/payment-success', { state: { reservationData, paymentData, bookingNo } });
+                sessionStorage.setItem('paymentSuccessData', JSON.stringify({ reservationData, paymentData, bookingNo }));
+                window.location.href = '/payment-success';
             }, 1400);
 
         } catch (err) {
@@ -371,7 +372,10 @@ export default function PaymentPage() {
                     <div className="flex justify-between items-center">
                         <button
                             type="button"
-                            onClick={() => navigate('/registration', { state: { reservationData } })}
+                            onClick={() => {
+                                sessionStorage.setItem('reservationData', JSON.stringify(reservationData));
+                                window.location.href = '/registration';
+                            }}
                             disabled={isProcessing}
                             className={`text-sm font-medium flex items-center gap-1 transition ${isProcessing ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}
                         >

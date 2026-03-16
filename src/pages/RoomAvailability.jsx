@@ -34,7 +34,7 @@ export default function RoomAvailability() {
         const allTypes = selectedRooms.map(r => r.type).join(',');
         const count = selectedRooms.length;
         
-        navigate(`/registration?rooms=${roomNos}&type=${allTypes}&count=${count}`);
+        window.location.href = `/registration?rooms=${roomNos}&type=${allTypes}&count=${count}`;
     };
 
     const fetchOccupancy = async () => {
