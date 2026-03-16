@@ -32,6 +32,25 @@ const parsePaymentRef = (refStr, method) => {
     return { code: refStr, bankRef: refStr }; // old transfer
 };
 
+const maskCardNumber = (cardNumber) => {
+    if (!cardNumber) return '-';
+    const cleanNum = cardNumber.replace(/\s|-/g, '');
+    if (cleanNum.length <= 4) return cardNumber;
+    const last4 = cleanNum.slice(-4);
+    const masked = cleanNum.slice(0, -4).replace(/./g, '*') + last4;
+    return masked.replace(/(.{4})/g, '$1 ').trim();
+};
+
+const maskPhoneNumber = (phone) => {
+    if (!phone) return '-';
+    const cleanNum = phone.replace(/\s|-/g, '');
+    if (cleanNum.length <= 4) return phone;
+    const first4 = cleanNum.slice(0, 4);
+    const last2 = cleanNum.slice(-2);
+    const middleLength = cleanNum.length - 6;
+    return `${first4}${'*'.repeat(middleLength > 0 ? middleLength : 4)}${last2}`;
+};
+
 export default function ReservationConfirmation() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -167,7 +186,7 @@ export default function ReservationConfirmation() {
                         <p className="font-bold text-[11px] text-gray-900 mb-2">💳 Pembayaran via Kartu Kredit</p>
                         <div className="space-y-1">
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Ref. Pembayaran</span><span className="font-bold text-gray-900">: {pData.code || '-'}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Number</span><span className="font-semibold">: {pData.cardNumber || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Number</span><span className="font-semibold">: {maskCardNumber(pData.cardNumber)}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Card Holder</span><span className="font-semibold">: {pData.cardHolder || '-'}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Expired</span><span className="font-semibold">: {pData.cardExpiry || '-'}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || calculatedGrandTotal)}</span></div>
@@ -197,7 +216,7 @@ export default function ReservationConfirmation() {
                         <div className="space-y-1">
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Ref. Pembayaran</span><span className="font-bold text-gray-900">: {pData.code || '-'}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Provider</span><span className="font-semibold">: {(pData.ewalletProvider || '-').toUpperCase()}</span></div>
-                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. HP / E-Wallet</span><span className="font-semibold">: {pData.ewalletPhone || '-'}</span></div>
+                            <div className="flex"><span className="w-36 text-gray-500 shrink-0">No. HP / E-Wallet</span><span className="font-semibold">: {maskPhoneNumber(pData.ewalletPhone)}</span></div>
                             <div className="flex"><span className="w-36 text-gray-500 shrink-0">Jumlah Pembayaran</span><span className="font-bold text-red-600">: {formatIDR(paymentData.grandTotal || calculatedGrandTotal)}</span></div>
                         </div>
                     </div>

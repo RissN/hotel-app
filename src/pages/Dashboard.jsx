@@ -38,6 +38,29 @@ const parsePaymentRef = (refStr, method) => {
     return { code: refStr, bankRef: refStr }; // old transfer
 };
 
+const maskCardNumber = (cardNumber) => {
+    if (!cardNumber) return '-';
+    // Remove spaces/dashes if any
+    const cleanNum = cardNumber.replace(/\s|-/g, '');
+    if (cleanNum.length <= 4) return cardNumber;
+    const last4 = cleanNum.slice(-4);
+    const masked = cleanNum.slice(0, -4).replace(/./g, '*') + last4;
+    // Format back into groups of 4 for better display
+    return masked.replace(/(.{4})/g, '$1 ').trim();
+};
+
+const maskPhoneNumber = (phone) => {
+    if (!phone) return '-';
+    const cleanNum = phone.replace(/\s|-/g, '');
+    if (cleanNum.length <= 4) return phone;
+    // Mask all but first 4 and last 2 characters or just masking the middle part
+    // Usual pattern for phone: 0812****56
+    const first4 = cleanNum.slice(0, 4);
+    const last2 = cleanNum.slice(-2);
+    const middleLength = cleanNum.length - 6;
+    return `${first4}${'*'.repeat(middleLength > 0 ? middleLength : 4)}${last2}`;
+};
+
 // ─── Print helper ──────────────────────────────────────────────────────────────
 function buildConfirmationHTML(tx) {
     const fmt = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
@@ -183,7 +206,7 @@ function buildConfirmationHTML(tx) {
   <div class="pay-info-box">
     <p class="pay-info-title">💳 Pembayaran via Kartu Kredit</p>
     <div class="pay-info-row"><span class="pi-lbl">Ref. Pembayaran</span><span class="pi-val">: <strong style="font-size:12px;">${pData.code || '-'}</strong></span></div>
-    <div class="pay-info-row"><span class="pi-lbl">Card Number</span><span class="pi-val">: ${pData.cardNumber || '-'}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">Card Number</span><span class="pi-val">: ${maskCardNumber(pData.cardNumber)}</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Card Holder</span><span class="pi-val">: ${pData.cardHolder || '-'}</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Expired</span><span class="pi-val">: ${pData.cardExpiry || '-'}</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Jumlah Pembayaran</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
@@ -205,7 +228,7 @@ function buildConfirmationHTML(tx) {
     <p class="pay-info-title">📱 Pembayaran via E-Wallet</p>
     <div class="pay-info-row"><span class="pi-lbl">Ref. Pembayaran</span><span class="pi-val">: <strong style="font-size:12px;">${pData.code || '-'}</strong></span></div>
     <div class="pay-info-row"><span class="pi-lbl">Provider</span><span class="pi-val">: ${(pData.ewalletProvider || '-').toUpperCase()}</span></div>
-    <div class="pay-info-row"><span class="pi-lbl">No. HP / E-Wallet</span><span class="pi-val">: ${pData.ewalletPhone || '-'}</span></div>
+    <div class="pay-info-row"><span class="pi-lbl">No. HP / E-Wallet</span><span class="pi-val">: ${maskPhoneNumber(pData.ewalletPhone)}</span></div>
     <div class="pay-info-row"><span class="pi-lbl">Jumlah Pembayaran</span><span class="pi-val red">: ${formatIDR(tx.grand_total)}</span></div>
   </div>`;
     } else {
@@ -341,11 +364,42 @@ function DetailModal({ activity, onClose, onPrint }) {
                                 {activity.payment_ref && (() => {
                                     const pData = parsePaymentRef(activity.payment_ref, activity.payment_method);
                                     return (
-                                        <div className="col-span-2 mt-1">
+                                        <div className="col-span-2 mt-1 space-y-1">
                                             <span className="text-slate-500 block text-xs">Referensi Pembayaran</span>
-                                            <span className="font-medium text-slate-800 break-all">
-                                                Ref: {pData.code || '-'}
-                                            </span>
+                                            <div className="bg-white/50 rounded-lg p-2 border border-purple-100/50">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="text-[10px] text-slate-400">Ref Code:</span>
+                                                    <span className="font-bold text-slate-700">{pData.code || '-'}</span>
+                                                </div>
+                                                {activity.payment_method === 'credit_card' && (
+                                                    <div className="space-y-0.5 border-t border-purple-100/50 pt-1 mt-1">
+                                                        <div className="flex justify-between">
+                                                            <span className="text-[10px] text-slate-400">Card Number:</span>
+                                                            <span className="font-medium text-slate-700">{maskCardNumber(pData.cardNumber)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span className="text-[10px] text-slate-400">Card Holder:</span>
+                                                            <span className="font-medium text-slate-700">{pData.cardHolder || '-'}</span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span className="text-[10px] text-slate-400">Expiry:</span>
+                                                            <span className="font-medium text-slate-700">{pData.cardExpiry || '-'}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {activity.payment_method === 'ewallet' && (
+                                                    <div className="space-y-0.5 border-t border-purple-100/50 pt-1 mt-1">
+                                                        <div className="flex justify-between">
+                                                            <span className="text-[10px] text-slate-400">Provider:</span>
+                                                            <span className="font-medium text-slate-700">{(pData.ewalletProvider || '-').toUpperCase()}</span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span className="text-[10px] text-slate-400">No. HP:</span>
+                                                            <span className="font-medium text-slate-700">{maskPhoneNumber(pData.ewalletPhone)}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })()}
