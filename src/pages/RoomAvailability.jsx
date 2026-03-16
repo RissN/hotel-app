@@ -63,6 +63,13 @@ export default function RoomAvailability() {
         return `${floor}${sequence}`;
     };
 
+    const getRoomCategory = (index) => {
+        const num = index + 1;
+        if (num <= 14) return { name: 'Standard', color: 'bg-slate-100 text-slate-600 border-slate-200' };
+        if (num <= 18) return { name: 'Deluxe', color: 'bg-amber-100 text-amber-700 border-amber-200' };
+        return { name: 'Suite', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' };
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh] text-slate-500">
@@ -84,14 +91,20 @@ export default function RoomAvailability() {
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Ketersediaan Kamar</h1>
                     <p className="text-slate-500 mt-1">Status hunian kamar secara waktu nyata (real-time).</p>
                 </div>
-                <div className="flex items-center gap-6 bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm self-start">
+                <div className="flex items-center gap-4 bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm self-start">
                     <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-md bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tersedia</span>
+                        <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tersedia</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-md bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"></div>
-                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Terisi</span>
+                        <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Terisi</span>
+                    </div>
+                    <div className="h-4 w-[1px] bg-slate-200 mx-1"></div>
+                    <div className="flex gap-2">
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200 uppercase">STD</span>
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-600 border border-amber-200 uppercase">DLX</span>
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-600 border border-indigo-200 uppercase">SUI</span>
                     </div>
                 </div>
             </header>
@@ -109,46 +122,54 @@ export default function RoomAvailability() {
                                 const roomNo = getRoomNumber(floor, i);
                                 const status = occupiedRooms[roomNo];
                                 const isOccupied = !!status;
+                                const category = getRoomCategory(i);
 
                                 return (
                                     <div
                                         key={roomNo}
                                         className={`relative group cursor-pointer transition-all duration-300 hover:-translate-y-1 ${
                                             isOccupied 
-                                            ? 'bg-rose-50 border-rose-200 text-rose-700' 
+                                            ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-[0_4px_12px_rgba(244,63,94,0.08)]' 
                                             : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/10'
-                                        } border rounded-xl p-3 shadow-sm flex flex-col items-center justify-center gap-1 h-20 overflow-hidden`}
+                                        } border rounded-xl p-3 shadow-sm flex flex-col items-center justify-center gap-1 h-24 overflow-hidden`}
                                     >
-                                        <span className={`text-sm font-bold tracking-tight ${isOccupied ? 'text-rose-600' : 'text-slate-500'}`}>
+                                        <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase border tracking-tighter ${category.color}`}>
+                                            {category.name.substring(0, 3)}
+                                        </div>
+
+                                        <span className={`text-sm font-black tracking-tight mt-2 ${isOccupied ? 'text-rose-600' : 'text-slate-600'}`}>
                                             {roomNo}
                                         </span>
                                         
                                         {isOccupied ? (
                                             <>
-                                                <div className="absolute top-1 right-1">
+                                                <div className="absolute top-2 right-2">
                                                     <span className="flex h-2 w-2">
                                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                                                     </span>
                                                 </div>
-                                                <span className="text-[10px] font-medium truncate w-full text-center px-1 opacity-80 uppercase tracking-tighter">
+                                                <span className="text-[10px] font-bold truncate w-full text-center px-1 opacity-90 uppercase tracking-tighter text-rose-800">
                                                     {status.guestName}
                                                 </span>
                                             </>
                                         ) : (
-                                            <span className="text-[10px] uppercase font-bold tracking-widest opacity-30">Vakant</span>
+                                            <span className="text-[10px] uppercase font-bold tracking-widest opacity-20">Vakant</span>
                                         )}
 
                                         {/* Tooltip on Hover */}
-                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-slate-900/90 backdrop-blur-sm transition-opacity duration-300 rounded-xl flex flex-col items-center justify-center p-2 text-[9px] text-white z-10 pointer-events-none">
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-slate-900/95 backdrop-blur-md transition-all duration-300 rounded-xl flex flex-col items-center justify-center p-3 text-[10px] text-white z-10 pointer-events-none transform scale-95 group-hover:scale-100">
+                                            <p className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest mb-1">{category.name}</p>
                                             {isOccupied ? (
                                                 <>
-                                                    <p className="font-bold border-b border-white/20 pb-1 mb-1 w-full text-center truncate">{status.guestName}</p>
-                                                    <p>In: {status.arrival}</p>
-                                                    <p>Out: {status.departure}</p>
+                                                    <p className="font-bold border-b border-white/20 pb-1 mb-1.5 w-full text-center truncate">{status.guestName}</p>
+                                                    <div className="space-y-0.5 opacity-80 text-center">
+                                                        <p>In: {status.arrival}</p>
+                                                        <p>Out: {status.departure}</p>
+                                                    </div>
                                                 </>
                                             ) : (
-                                                <p className="font-bold">Kamar Siap</p>
+                                                <p className="font-bold tracking-wide">Kamar Siap Huni</p>
                                             )}
                                         </div>
                                     </div>
