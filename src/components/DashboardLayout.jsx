@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CustomAlert from './CustomAlert';
 
@@ -165,9 +165,9 @@ const DashboardLayout = () => {
                                     {visibleItems.map((item) => {
                                         const isActive = location.pathname === item.path;
                                         return (
-                                            <Link
+                                            <a
                                                 key={item.path}
-                                                to={item.path}
+                                                href={item.path}
                                                 className={`flex items-center px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
                                                         ? 'bg-indigo-500/10 text-indigo-400 font-semibold shadow-[inset_0_0_12px_rgba(99,102,241,0.05)]'
                                                         : 'hover:bg-slate-800/50 hover:text-white text-slate-400'
@@ -180,7 +180,7 @@ const DashboardLayout = () => {
                                                 {isActive && (
                                                     <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.8)]"></span>
                                                 )}
-                                            </Link>
+                                            </a>
                                         );
                                     })}
                                 </div>
