@@ -21,6 +21,8 @@ export default function RegistrationForm() {
     const [formData, setFormData] = useState({
         roomNo: '',
         roomType: '',
+        numberOfRoom: 1,
+        numberOfPerson: 1,
         receptionist: username || '',
         checkOutTime: '12.00 Noon',
         name: '',
@@ -43,14 +45,17 @@ export default function RegistrationForm() {
 
     // Capture search params for room number and type
     useEffect(() => {
+        const rooms = searchParams.get('rooms');
         const room = searchParams.get('room');
         const type = searchParams.get('type');
+        const count = searchParams.get('count');
         
-        if (room || type) {
+        if (rooms || room || type || count) {
             setFormData(prev => ({
                 ...prev,
-                roomNo: room || prev.roomNo,
-                roomType: type || prev.roomType
+                roomNo: rooms || room || prev.roomNo,
+                roomType: type || prev.roomType,
+                numberOfRoom: count || prev.numberOfRoom
             }));
         }
     }, [searchParams]);
