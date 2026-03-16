@@ -27,39 +27,49 @@ const DashboardLayout = () => {
         }, 1800);
     };
 
-    const navItems = [
+    const menuGroups = [
         {
-            name: 'Dashboard',
-            path: '/dashboard',
-            roles: ['Superadmin', 'Admin'],
-            icon: (
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-            )
+            title: 'Menu',
+            items: [
+                {
+                    name: 'Reservasi Baru',
+                    path: '/registration',
+                    roles: ['Superadmin', 'Admin', 'Resepsionis'],
+                    icon: (
+                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    )
+                },
+                {
+                    name: 'Ketersediaan Kamar',
+                    path: '/rooms',
+                    roles: ['Superadmin', 'Admin', 'Resepsionis'],
+                    icon: (
+                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                    )
+                },
+            ]
         },
         {
-            name: 'User Management',
-            path: '/users',
-            roles: ['Superadmin'],
-            icon: (
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            )
-        },
-        {
-            name: 'Ketersediaan Kamar',
-            path: '/rooms',
-            roles: ['Superadmin', 'Admin', 'Resepsionis'],
-            icon: (
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-            )
-        },
-        {
-            name: 'Reservasi Baru',
-            path: '/registration',
-            roles: ['Superadmin', 'Admin', 'Resepsionis'],
-            icon: (
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-            )
-        },
+            title: 'Administrator',
+            items: [
+                {
+                    name: 'Dashboard',
+                    path: '/dashboard',
+                    roles: ['Superadmin', 'Admin'],
+                    icon: (
+                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                    )
+                },
+                {
+                    name: 'User Management',
+                    path: '/users',
+                    roles: ['Superadmin'],
+                    icon: (
+                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    )
+                },
+            ]
+        }
     ];
 
     return (
@@ -141,28 +151,40 @@ const DashboardLayout = () => {
                     </div>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-                    {navItems.map((item) => {
-                        if (!item.roles.includes(role)) return null;
+                <nav className="flex-1 p-4 space-y-8 overflow-y-auto custom-scrollbar">
+                    {menuGroups.map((group) => {
+                        const visibleItems = group.items.filter(item => item.roles.includes(role));
+                        if (visibleItems.length === 0) return null;
 
-                        const isActive = location.pathname === item.path;
                         return (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                className={`flex items-center px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
-                                        ? 'bg-indigo-500/10 text-indigo-400 font-semibold'
-                                        : 'hover:bg-slate-800/50 hover:text-white text-slate-400'
-                                    }`}
-                            >
-                                <span className={`${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'} transition-colors duration-300`}>
-                                    {item.icon}
-                                </span>
-                                {item.name}
-                                {isActive && (
-                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]"></span>
-                                )}
-                            </Link>
+                            <div key={group.title} className="space-y-2">
+                                <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">
+                                    {group.title}
+                                </h3>
+                                <div className="space-y-1">
+                                    {visibleItems.map((item) => {
+                                        const isActive = location.pathname === item.path;
+                                        return (
+                                            <Link
+                                                key={item.path}
+                                                to={item.path}
+                                                className={`flex items-center px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
+                                                        ? 'bg-indigo-500/10 text-indigo-400 font-semibold shadow-[inset_0_0_12px_rgba(99,102,241,0.05)]'
+                                                        : 'hover:bg-slate-800/50 hover:text-white text-slate-400'
+                                                    }`}
+                                            >
+                                                <span className={`${isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'} transition-colors duration-300`}>
+                                                    {item.icon}
+                                                </span>
+                                                <span className="text-sm">{item.name}</span>
+                                                {isActive && (
+                                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.8)]"></span>
+                                                )}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         );
                     })}
                 </nav>
