@@ -48,11 +48,15 @@ export default function RoomAvailability() {
 
             const occupancyMap = {};
             data.forEach(tx => {
-                occupancyMap[tx.room_no] = {
-                    guestName: tx.guest_name,
-                    arrival: tx.arrival_date,
-                    departure: tx.departure_date
-                };
+                // Split multi-room strings like "101, 102"
+                const roomNos = tx.room_no.split(',').map(n => n.trim());
+                roomNos.forEach(roomNo => {
+                    occupancyMap[roomNo] = {
+                        guestName: tx.guest_name,
+                        arrival: tx.arrival_date,
+                        departure: tx.departure_date
+                    };
+                });
             });
             setOccupiedRooms(occupancyMap);
         } catch (error) {
