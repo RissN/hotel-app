@@ -110,6 +110,13 @@ const Login = () => {
                 style={loginSuccess ? { animation: 'loginCardFadeOut 0.4s ease-in forwards' } : {}}
             >
                 <div className="text-center mb-8">
+                    <div className="flex justify-center mb-6">
+                        <img 
+                            src="/logo.png" 
+                            alt="Hotel Logo" 
+                            className="h-20 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
+                        />
+                    </div>
                     <h2 className="text-3xl font-extrabold text-slate-900 drop-shadow-sm">
                         Hotel Staff Login
                     </h2>
