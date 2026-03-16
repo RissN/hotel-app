@@ -140,7 +140,7 @@ export default function RegistrationForm() {
             )}
 
             <div
-                className="max-w-7xl mx-auto rounded-2xl shadow-2xl overflow-hidden border border-gray-200 bg-white animate-page-entrance"
+                className="rounded-2xl shadow-2xl overflow-hidden border border-gray-200 bg-white animate-page-entrance"
                 style={navigating ? { animation: 'pageTransContentOut 0.4s ease-in forwards' } : {}}
             >
 

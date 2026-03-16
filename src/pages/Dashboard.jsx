@@ -833,7 +833,7 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-page-entrance">
+        <div className="px-6 py-8 space-y-8 animate-page-entrance">
             <header className="mb-10 flex items-start justify-between">
                 <div>
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard Ringkasan</h1>
