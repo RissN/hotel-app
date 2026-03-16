@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 export default function RoomAvailability() {
+    const navigate = useNavigate();
     const [occupiedRooms, setOccupiedRooms] = useState({});
     const [loading, setLoading] = useState(true);
 
@@ -127,6 +129,7 @@ export default function RoomAvailability() {
                                 return (
                                     <div
                                         key={roomNo}
+                                        onClick={() => !isOccupied && navigate(`/registration?room=${roomNo}&type=${category.name}`)}
                                         className={`relative group cursor-pointer transition-all duration-300 hover:-translate-y-1 ${
                                             isOccupied 
                                             ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-[0_4px_12px_rgba(244,63,94,0.08)]' 

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ROOM_PRICES = {
@@ -14,13 +14,12 @@ const formatIDR = (amount) =>
 
 export default function RegistrationForm() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { username } = useAuth();
     const [showConfirm, setShowConfirm] = useState(false);
     const [navigating, setNavigating] = useState(false);
     const [formData, setFormData] = useState({
         roomNo: '',
-        numberOfPerson: '',
-        numberOfRoom: '',
         roomType: '',
         receptionist: username || '',
         checkOutTime: '12.00 Noon',
@@ -41,6 +40,20 @@ export default function RegistrationForm() {
         issuedBy: username || '',
         issuedDate: ''
     });
+
+    // Capture search params for room number and type
+    useEffect(() => {
+        const room = searchParams.get('room');
+        const type = searchParams.get('type');
+        
+        if (room || type) {
+            setFormData(prev => ({
+                ...prev,
+                roomNo: room || prev.roomNo,
+                roomType: type || prev.roomType
+            }));
+        }
+    }, [searchParams]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
