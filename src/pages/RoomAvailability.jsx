@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
+const ROOM_PRICES = {
+    Standard: 1500000,
+    Deluxe: 2500000,
+    Suite: 4000000,
+};
+
+const formatIDR = (amount) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+
 export default function RoomAvailability() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -26,6 +35,8 @@ export default function RoomAvailability() {
             }
         });
     };
+
+    const totalPrice = selectedRooms.reduce((acc, r) => acc + ROOM_PRICES[r.type], 0);
 
     const handleProceed = () => {
         if (selectedRooms.length === 0) return;
@@ -348,7 +359,7 @@ export default function RoomAvailability() {
                     </h2>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-3">
                     {selectedRooms.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
                              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4 border-2 border-dashed border-slate-300">
@@ -365,7 +376,10 @@ export default function RoomAvailability() {
                                         <span className="text-sm font-black text-indigo-600">{room.no}</span>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">{room.type}</p>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">{room.type}</p>
+                                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">{formatIDR(ROOM_PRICES[room.type])}/malam</span>
+                                        </div>
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
                                             <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">Ready to check-in</span>
@@ -387,9 +401,14 @@ export default function RoomAvailability() {
                     <div className="p-6 bg-slate-50/80 border-t border-slate-100 backdrop-blur-md">
                         <div className="flex items-center justify-between mb-6">
                             <span className="text-xs font-black uppercase tracking-[0.1em] text-slate-400">Total Selection</span>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-3xl font-black text-indigo-600 leading-none">{selectedRooms.length}</span>
-                                <span className="text-xs font-bold text-slate-400 uppercase">Unit</span>
+                            <div className="flex flex-col items-end gap-1">
+                                <div className="flex items-baseline gap-1">
+                                    <span key={`count-${selectedRooms.length}`} className="text-3xl font-black text-indigo-600 leading-none animate-price-pop text-right">{selectedRooms.length}</span>
+                                    <span className="text-xs font-bold text-slate-400 uppercase">Unit</span>
+                                </div>
+                                <span key={`price-${totalPrice}`} className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-md animate-price-pop inline-block">
+                                    {formatIDR(totalPrice)} / malam
+                                </span>
                             </div>
                         </div>
                         <button
@@ -414,6 +433,14 @@ export default function RoomAvailability() {
                 }
                 .animate-slide-in {
                     animation: slide-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+                }
+                @keyframes price-pop {
+                    0% { transform: scale(1); }
+                    30% { transform: scale(1.15) translateY(-2px); color: #4f46e5; }
+                    100% { transform: scale(1); }
+                }
+                .animate-price-pop {
+                    animation: price-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
             `}</style>
         </div>
