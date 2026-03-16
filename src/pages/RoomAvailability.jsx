@@ -149,7 +149,7 @@ export default function RoomAvailability() {
     }
 
     return (
-        <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden">
+        <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden animate-page-entrance">
             {/* Main Content Area */}
             <div className="flex-1 p-6 lg:p-8 flex flex-col overflow-hidden">
                 <header className="mb-6 shrink-0">
