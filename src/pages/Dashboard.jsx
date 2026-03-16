@@ -540,6 +540,7 @@ export default function Dashboard() {
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [jakartaTime, setJakartaTime] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [roomTypeFilter, setRoomTypeFilter] = useState('Semua');
 
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ 
@@ -800,11 +801,22 @@ export default function Dashboard() {
         }
     ];
 
+    // Extract unique room types, splitting comma-separated values for multi-room bookings
+    const roomTypes = ['Semua', ...Array.from(new Set(
+        recentActivities
+            .flatMap(a => (a.room_type || '').split(',').map(t => t.trim()))
+            .filter(Boolean)
+    )).sort()];
+
     const filteredActivities = recentActivities.filter(activity => {
+        // Room type filter — supports multi-room bookings (e.g. "Standard,Deluxe")
+        if (roomTypeFilter !== 'Semua') {
+            const types = (activity.room_type || '').split(',').map(t => t.trim());
+            if (!types.includes(roomTypeFilter)) return false;
+        }
         // Text search filter
         if (!searchTerm) return true;
         const lowerSearch = searchTerm.toLowerCase();
-        // Handle multi-room bookings: split comma-separated room_type for individual matching
         const roomTypeMatch = activity.room_type && activity.room_type.split(',').some(t => t.trim().toLowerCase().includes(lowerSearch));
         return (
             (activity.guest_name && activity.guest_name.toLowerCase().includes(lowerSearch)) ||
@@ -1002,7 +1014,29 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                
+                {/* Room Type Filter */}
+                <div className="flex items-center gap-2 mb-5 flex-wrap">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Tipe Kamar:</span>
+                    {roomTypes.map((type) => (
+                        <button
+                            key={type}
+                            onClick={() => setRoomTypeFilter(type)}
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${
+                                roomTypeFilter === type
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                            }`}
+                        >
+                            {type}
+                        </button>
+                    ))}
+                    {roomTypeFilter !== 'Semua' && (
+                        <span className="text-xs text-slate-400 ml-2">
+                            {filteredActivities.length} hasil
+                        </span>
+                    )}
+                </div>
+
                 <div className="max-h-[500px] overflow-y-auto pr-2 -mr-2 space-y-3 custom-scrollbar">
                 {filteredActivities && filteredActivities.length > 0 ? (
                     <div className="space-y-3">
@@ -1137,7 +1171,7 @@ export default function Dashboard() {
                         <svg className="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        <p>{searchTerm ? "Tidak ditemukan aktivitas yang cocok dengan pencarian Anda." : "Belum ada aktivitas reservasi terbaru."}</p>
+                        <p>{searchTerm || roomTypeFilter !== 'Semua' ? "Tidak ditemukan aktivitas yang cocok dengan filter atau pencarian Anda." : "Belum ada aktivitas reservasi terbaru."}</p>
                     </div>
                 )}
                 </div>
