@@ -26,7 +26,7 @@ function App() {
                         <Route path="/" element={<RoleBasedHome />} />
                         
                         {/* New Dashboard for Admins / Superadmins */}
-                        <Route element={<ProtectedRoute allowedRoles={['Superadmin', 'Admin']} />}>
+                        <Route element={<ProtectedRoute allowedRoles={['Superadmin', 'Admin', 'Resepsionis']} />}>
                             <Route path="/dashboard" element={<Dashboard />} />
                         </Route>
                         

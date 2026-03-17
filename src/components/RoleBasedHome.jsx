@@ -11,7 +11,7 @@ const RoleBasedHome = () => {
     if (role === 'Superadmin' || role === 'Admin') {
         return <Navigate to="/dashboard" replace />;
     } else if (role === 'Resepsionis') {
-        return <Navigate to="/registration" replace />;
+        return <Navigate to="/dashboard" replace />;
     } else {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">

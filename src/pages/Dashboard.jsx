@@ -938,83 +938,85 @@ export default function Dashboard() {
             </div>
 
             {/* ── Revenue Chart ── */}
-            <div className="mt-10">
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="text-lg font-bold text-slate-800">Grafik Pendapatan</h2>
-                            <p className="text-slate-400 text-sm mt-0.5">{chartSubtitle[chartRange]}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {CHART_RANGES.map((r) => (
-                                <button
-                                    key={r.key}
-                                    onClick={() => setChartRange(r.key)}
-                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${
-                                        chartRange === r.key
-                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
-                                    }`}
-                                >
-                                    {r.label}
-                                </button>
-                            ))}
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 ml-2">
-                                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                </svg>
+            {(role === 'Superadmin' || role === 'Admin') && (
+                <div className="mt-10">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-800">Grafik Pendapatan</h2>
+                                <p className="text-slate-400 text-sm mt-0.5">{chartSubtitle[chartRange]}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {CHART_RANGES.map((r) => (
+                                    <button
+                                        key={r.key}
+                                        onClick={() => setChartRange(r.key)}
+                                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${
+                                            chartRange === r.key
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200'
+                                                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                                        }`}
+                                    >
+                                        {r.label}
+                                    </button>
+                                ))}
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 ml-2">
+                                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                                <defs>
-                                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                <XAxis
-                                    dataKey="label"
-                                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                                    tickLine={false}
-                                    axisLine={{ stroke: '#e2e8f0' }}
-                                    interval={chartRange === '1bulan' ? Math.max(0, Math.floor(chartData.length / 7) - 1) : chartRange === '1hari' ? 2 : 0}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickFormatter={(v) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}jt` : v >= 1_000 ? `${(v / 1_000).toFixed(0)}rb` : v}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        background: '#1e293b',
-                                        border: 'none',
-                                        borderRadius: '12px',
-                                        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-                                        padding: '10px 14px',
-                                    }}
-                                    labelStyle={{ color: '#94a3b8', fontSize: 12, marginBottom: 4 }}
-                                    itemStyle={{ color: '#fff', fontWeight: 700, fontSize: 13 }}
-                                    formatter={(value) => [formatIDR(value), 'Pendapatan']}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="total"
-                                    stroke="#6366f1"
-                                    strokeWidth={2.5}
-                                    fill="url(#revenueGrad)"
-                                    dot={chartRange !== '1bulan' && chartRange !== '1hari' ? { r: 3, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 } : false}
-                                    activeDot={{ r: 5, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        <div className="h-80">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                                    <defs>
+                                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                    <XAxis
+                                        dataKey="label"
+                                        tick={{ fontSize: 11, fill: '#94a3b8' }}
+                                        tickLine={false}
+                                        axisLine={{ stroke: '#e2e8f0' }}
+                                        interval={chartRange === '1bulan' ? Math.max(0, Math.floor(chartData.length / 7) - 1) : chartRange === '1hari' ? 2 : 0}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 11, fill: '#94a3b8' }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(v) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}jt` : v >= 1_000 ? `${(v / 1_000).toFixed(0)}rb` : v}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            background: '#1e293b',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+                                            padding: '10px 14px',
+                                        }}
+                                        labelStyle={{ color: '#94a3b8', fontSize: 12, marginBottom: 4 }}
+                                        itemStyle={{ color: '#fff', fontWeight: 700, fontSize: 13 }}
+                                        formatter={(value) => [formatIDR(value), 'Pendapatan']}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="total"
+                                        stroke="#6366f1"
+                                        strokeWidth={2.5}
+                                        fill="url(#revenueGrad)"
+                                        dot={chartRange !== '1bulan' && chartRange !== '1hari' ? { r: 3, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 } : false}
+                                        activeDot={{ r: 5, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* ── Aktivitas Terbaru ── */}
             <div className="mt-12 bg-white rounded-3xl p-8 shadow-md border border-slate-200 mb-10">
