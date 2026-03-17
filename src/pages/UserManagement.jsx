@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../supabaseClient';
 import CustomAlert from '../components/CustomAlert';
+import { useAuth } from '../context/AuthContext';
 
 const UserManagement = () => {
+    const { role: myRole } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -42,10 +44,62 @@ const UserManagement = () => {
     const [userLogins, setUserLogins] = useState([]);
     const [userTransactions, setUserTransactions] = useState([]);
     const [isActivityLoading, setIsActivityLoading] = useState(false);
+    
+    // Announcement state
+    const [announcementMsg, setAnnouncementMsg] = useState('');
+    const [isAnnouncementActive, setIsAnnouncementActive] = useState(true);
+    const [isSavingAnnouncement, setIsSavingAnnouncement] = useState(false);
+    const [announcementId, setAnnouncementId] = useState(null);
 
     useEffect(() => {
         fetchUsers();
+        fetchAnnouncement();
     }, []);
+
+    const fetchAnnouncement = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('announcements')
+                .select('*')
+                .limit(1)
+                .single();
+            
+            if (data) {
+                setAnnouncementId(data.id);
+                setAnnouncementMsg(data.content);
+                setIsAnnouncementActive(data.is_active);
+            }
+        } catch (err) {
+            console.log("No existing announcement or error:", err.message);
+        }
+    };
+
+    const handleSaveAnnouncement = async (e) => {
+        e.preventDefault();
+        setIsSavingAnnouncement(true);
+        try {
+            if (announcementId) {
+                const { error } = await supabase
+                    .from('announcements')
+                    .update({ content: announcementMsg, is_active: isAnnouncementActive, updated_at: new Date() })
+                    .eq('id', announcementId);
+                if (error) throw error;
+            } else {
+                const { data, error } = await supabase
+                    .from('announcements')
+                    .insert([{ content: announcementMsg, is_active: isAnnouncementActive }])
+                    .select();
+                if (error) throw error;
+                if (data && data[0]) setAnnouncementId(data[0].id);
+            }
+            setAlertConfig({ isOpen: true, title: 'Berhasil', message: 'Pengumuman telah diperbarui.', type: 'success' });
+        } catch (err) {
+            console.error("Save announcement error:", err);
+            setAlertConfig({ isOpen: true, title: 'Gagal', message: err.message || 'Gagal menyimpan pengumuman.', type: 'error' });
+        } finally {
+            setIsSavingAnnouncement(false);
+        }
+    };
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -395,6 +449,54 @@ const UserManagement = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Announcement Management (Superadmin Only) */}
+            {myRole === 'Superadmin' && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-8">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800">Manajemen Pengumuman (Running Text)</h3>
+                            <p className="text-sm text-slate-500">Tampilkan pesan peringatan sistem untuk Admin & Resepsionis.</p>
+                        </div>
+                    </div>
+                    <form onSubmit={handleSaveAnnouncement} className="space-y-4">
+                        <div>
+                            <textarea
+                                value={announcementMsg}
+                                onChange={(e) => setAnnouncementMsg(e.target.value)}
+                                placeholder="Tuliskan pesan pengumuman di sini..."
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all text-slate-800 font-medium h-24"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={isAnnouncementActive}
+                                    onChange={(e) => setIsAnnouncementActive(e.target.checked)}
+                                    className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                                />
+                                <span className="text-sm font-medium text-slate-700 font-bold">Aktifkan Pengumuman</span>
+                            </label>
+                            <button
+                                type="submit"
+                                disabled={isSavingAnnouncement}
+                                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-sm shadow-red-200 flex items-center gap-2 disabled:opacity-70"
+                            >
+                                {isSavingAnnouncement ? (
+                                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                )}
+                                Simpan Pengumuman
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
 
             {/* Search & Filter */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">

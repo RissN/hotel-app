@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AnnouncementMarquee from './AnnouncementMarquee';
 import CustomAlert from './CustomAlert';
 
 const DashboardLayout = () => {
@@ -194,6 +195,7 @@ const DashboardLayout = () => {
                 className="flex-1 overflow-x-hidden min-h-screen relative"
                 style={loggingOut ? { animation: 'logoutContentFade 0.5s ease-in forwards' } : {}}
             >
+                <AnnouncementMarquee />
                 <Outlet />
             </main>
 
