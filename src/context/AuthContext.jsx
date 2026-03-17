@@ -131,6 +131,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
+        sessionStorage.removeItem('announcement_shown');
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
     };

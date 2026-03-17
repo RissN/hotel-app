@@ -5,27 +5,35 @@ import { useAuth } from '../context/AuthContext';
 const AnnouncementMarquee = () => {
     const { role } = useAuth();
     const [announcement, setAnnouncement] = useState(null);
-    const [isVisible, setIsVisible] = useState(true);
+    const [isVisible, setIsVisible] = useState(false);
     const [isExiting, setIsExiting] = useState(false);
 
     // Only show for Admin and Resepsionis
     if (role !== 'Admin' && role !== 'Resepsionis') return null;
 
     useEffect(() => {
-        // Start exit animation after 14 seconds
-        const exitTimer = setTimeout(() => {
-            setIsExiting(true);
-        }, 14000);
+        // Check if already shown in this session
+        const hasBeenShown = sessionStorage.getItem('announcement_shown');
+        
+        if (!hasBeenShown) {
+            setIsVisible(true);
+            sessionStorage.setItem('announcement_shown', 'true');
 
-        // Auto-hide after 15 seconds (allowing 1s for animation)
-        const hideTimer = setTimeout(() => {
-            setIsVisible(false);
-        }, 15000);
+            // Start exit animation after 14 seconds
+            const exitTimer = setTimeout(() => {
+                setIsExiting(true);
+            }, 14000);
 
-        return () => {
-            clearTimeout(exitTimer);
-            clearTimeout(hideTimer);
-        };
+            // Auto-hide after 15 seconds (allowing 1s for animation)
+            const hideTimer = setTimeout(() => {
+                setIsVisible(false);
+            }, 15000);
+
+            return () => {
+                clearTimeout(exitTimer);
+                clearTimeout(hideTimer);
+            };
+        }
     }, []);
 
     useEffect(() => {
