@@ -5,9 +5,28 @@ import { useAuth } from '../context/AuthContext';
 const AnnouncementMarquee = () => {
     const { role } = useAuth();
     const [announcement, setAnnouncement] = useState(null);
+    const [isVisible, setIsVisible] = useState(true);
+    const [isExiting, setIsExiting] = useState(false);
 
     // Only show for Admin and Resepsionis
     if (role !== 'Admin' && role !== 'Resepsionis') return null;
+
+    useEffect(() => {
+        // Start exit animation after 14 seconds
+        const exitTimer = setTimeout(() => {
+            setIsExiting(true);
+        }, 14000);
+
+        // Auto-hide after 15 seconds (allowing 1s for animation)
+        const hideTimer = setTimeout(() => {
+            setIsVisible(false);
+        }, 15000);
+
+        return () => {
+            clearTimeout(exitTimer);
+            clearTimeout(hideTimer);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchAnnouncement = async () => {
@@ -36,10 +55,10 @@ const AnnouncementMarquee = () => {
         };
     }, []);
 
-    if (!announcement) return null;
+    if (!announcement || !isVisible) return null;
 
     return (
-        <div className="bg-red-600 text-white py-2 overflow-hidden sticky top-0 z-[40]">
+        <div className={`bg-red-600 text-white py-2 overflow-hidden sticky top-0 z-[40] transition-all duration-1000 ease-in-out ${isExiting ? 'opacity-0 -translate-y-full max-h-0 py-0' : 'max-h-20'}`}>
             <div className="flex gap-4">
                 <div className="animate-marquee whitespace-nowrap font-bold flex gap-10 items-center">
                     <span>⚠️ PENGUMUMAN: {announcement}</span>
