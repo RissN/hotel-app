@@ -78,7 +78,8 @@ export default function RoomAvailability() {
                 .from('transactions')
                 .select('room_no, guest_name, arrival_date, departure_date')
                 .lte('arrival_date', today)
-                .gt('departure_date', today);
+                .gt('departure_date', today)
+                .neq('status', 'canceled');
 
             if (activeError) throw activeError;
 
@@ -99,7 +100,8 @@ export default function RoomAvailability() {
             const { data: upcomingData, error: upcomingError } = await supabase
                 .from('transactions')
                 .select('room_no, guest_name, arrival_date, departure_date')
-                .gt('arrival_date', today);
+                .gt('arrival_date', today)
+                .neq('status', 'canceled');
 
             if (upcomingError) throw upcomingError;
 
