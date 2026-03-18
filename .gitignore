@@ -23,6 +23,7 @@ PANDUAN_SUPABASE.md
 RPC_SETUP.md
 schema.sql
 supabase_rls_setup.sql
+hotel_profile_setup.sql
 
 # Editor directories and files
 .vscode/*
