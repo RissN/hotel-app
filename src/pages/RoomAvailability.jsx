@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
-const ROOM_PRICES = {
+// fallback
+const DEFAULT_PRICES = {
     Standard: 1500000,
     Deluxe: 2500000,
     Suite: 4000000,
@@ -19,6 +20,25 @@ export default function RoomAvailability() {
     const [selectedRooms, setSelectedRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(0);
+    const [roomPrices, setRoomPrices] = useState(DEFAULT_PRICES);
+
+    useEffect(() => {
+        const fetchRates = async () => {
+            try {
+                const { data } = await supabase.from('room_rates').select('room_type, base_price, seasonal_price');
+                if (data && data.length > 0) {
+                    const priceMap = { ...DEFAULT_PRICES };
+                    data.forEach(r => {
+                        priceMap[r.room_type] = r.seasonal_price || r.base_price;
+                    });
+                    setRoomPrices(priceMap);
+                }
+            } catch (error) {
+                console.error("Fetch rates error:", error);
+            }
+        };
+        fetchRates();
+    }, []);
 
     const floors = [5, 4, 3, 2, 1]; // Top floor first
     const roomsPerFloor = 20;
@@ -36,7 +56,7 @@ export default function RoomAvailability() {
         });
     };
 
-    const totalPrice = selectedRooms.reduce((acc, r) => acc + ROOM_PRICES[r.type], 0);
+    const totalPrice = selectedRooms.reduce((acc, r) => acc + (roomPrices[r.type] || 0), 0);
 
     const handleProceed = () => {
         if (selectedRooms.length === 0) return;
@@ -190,7 +210,7 @@ export default function RoomAvailability() {
                     </div>
                 </header>
 
-                <div className="space-y-12 pb-4 flex-1">
+                <div key={currentPage} className="space-y-12 pb-4 flex-1 animate-slide-in">
                     {pagedFloors.map(floor => (
                         <section key={floor} className="relative">
                             <div className="flex items-center gap-4 mb-6">
@@ -378,7 +398,7 @@ export default function RoomAvailability() {
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
                                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">{room.type}</p>
-                                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">{formatIDR(ROOM_PRICES[room.type])}/malam</span>
+                                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">{formatIDR(roomPrices[room.type] || 0)}/malam</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>

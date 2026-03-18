@@ -927,6 +927,34 @@ export default function Dashboard() {
         );
     });
 
+    const handleExportCSV = () => {
+        if (recentActivities.length === 0) return alert("Tidak ada data untuk diekspor.");
+
+        const headers = ["ID", "Nama Tamu", "Kamar", "Tipe Kamar", "Orang", "Check-In", "Check-Out", "Status"];
+        const rows = recentActivities.map(a => [
+            a.id,
+            a.guest_name || '-',
+            a.room_no || '-',
+            a.room_type || '-',
+            a.number_of_person || 1,
+            a.arrival_date ? new Date(a.arrival_date).toLocaleDateString('id-ID') : '-',
+            a.departure_date ? new Date(a.departure_date).toLocaleDateString('id-ID') : '-',
+            a.status || '-'
+        ]);
+
+        let csvContent = "data:text/csv;charset=utf-8," 
+            + headers.join(",") + "\n"
+            + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Laporan_Reservasi_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full p-8 text-slate-500">
@@ -943,10 +971,19 @@ export default function Dashboard() {
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Dashboard Ringkasan</h1>
                     <p className="text-slate-500 mt-2 text-lg">Selamat datang kembali, pantau aktivitas hotel hari ini.</p>
                 </div>
-                <div className="text-right shrink-0 ml-6">
+                <div className="flex flex-row items-center gap-3 shrink-0 ml-6">
+                    {(role === 'Superadmin' || role === 'Admin') && (
+                        <button
+                            onClick={handleExportCSV}
+                            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl text-sm font-bold shadow-sm shadow-emerald-100 hover:-translate-y-0.5 transition-all duration-200 h-full"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            Ekspor Laporan
+                        </button>
+                    )}
                     <div className="bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">🕐 Waktu Jakarta (WIB)</p>
-                        <p className="text-lg font-bold text-slate-800 tabular-nums tracking-tight">{jakartaTime}</p>
+                        <p className="text-md font-bold text-slate-800 tabular-nums tracking-tight">{jakartaTime}</p>
                     </div>
                 </div>
             </header>

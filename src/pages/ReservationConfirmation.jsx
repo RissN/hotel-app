@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 const formatIDR = (amount) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -61,6 +62,21 @@ export default function ReservationConfirmation() {
         Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
     );
 
+    const [profile, setProfile] = useState(null);
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            const { data } = await supabase.from('hotel_profile').select('*').limit(1).single();
+            if (data) setProfile(data);
+        } catch (err) {
+            console.error("Fetch profile confirmation error:", err);
+        }
+    };
+
     // Calculate total nights automatically
     const totalNights = useMemo(() => {
         if (reservationData.arrivalDate && reservationData.departureDate) {
@@ -113,12 +129,15 @@ export default function ReservationConfirmation() {
                 <div className="text-center mb-4">
                     <div className="flex justify-center mb-1">
                         <img 
-                            src="/logo.png" 
-                            alt="Logo PPKD Jakarta Pusat" 
+                            src={profile?.logo_url || "/logo.png"} 
+                            alt="Logo" 
                             className="w-14 h-14 object-contain"
+                            onError={(e) => { e.target.src = "/logo.png" }}
                         />
                     </div>
-                    <h1 className="text-[16px] font-bold tracking-widest text-gray-900 uppercase">PPKD HOTEL</h1>
+                    <h1 className="text-[16px] font-bold tracking-widest text-gray-900 uppercase">
+                        {profile?.name || 'PPKD HOTEL'}
+                    </h1>
                 </div>
 
                 <div className="mb-3">
@@ -138,9 +157,8 @@ export default function ReservationConfirmation() {
                         <div className="flex flex-wrap"><span className="w-28 text-gray-800 shrink-0">Email</span><span className="text-blue-600 underline">: {reservationData.email || '-'}</span></div>
                     </div>
                     <div className="space-y-1">
-                        <div className="flex"><span className="w-20 text-gray-800 shrink-0">Telp</span><span className="font-medium">: (021) 1234567</span></div>
-                        <div className="flex"><span className="w-20 text-gray-800 shrink-0">Fax</span><span className="font-medium">: (021) 7654321</span></div>
-                        <div className="flex flex-wrap"><span className="w-20 text-gray-800 shrink-0">Email</span><span className="text-blue-600 underline">: info@ppkdhotel.com</span></div>
+                        <div className="flex"><span className="w-20 text-gray-800 shrink-0">Telp</span><span className="font-medium">: {profile?.phone || '(021) 1234567'}</span></div>
+                        <div className="flex flex-wrap"><span className="w-20 text-gray-800 shrink-0">Email</span><span className="text-blue-600 underline">: {profile?.email || 'info@ppkdhotel.com'}</span></div>
                         <div className="flex"><span className="w-20 text-gray-800 shrink-0">Date</span><span className="font-medium">: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
                     </div>
                 </div>
@@ -255,14 +273,18 @@ export default function ReservationConfirmation() {
                     </div>
                 )}
 
-                {/* Cancellation Policy */}
-                <div className="bg-[#f2f2f2] px-3 py-2 text-[8px] text-gray-700">
-                    <p className="font-bold mb-0.5 underline text-gray-900">Cancellation policy:</p>
-                    <ol className="list-decimal pl-3 space-y-0.5">
-                        <li>Please note that check in time is 02.00 pm and check out time 12.00 pm.</li>
-                        <li>All non guaranteed reservations will automatically be released on 6 pm.</li>
-                        <li>The Hotel will charge 1 night for guaranteed reservations that have not been canceling before the day of arrival. Please carefully note your cancellation number.</li>
-                    </ol>
+                {/* Cancellation & Policy */}
+                <div className="bg-[#f2f2f2] px-3 py-2 text-[8px] text-gray-700 rounded-sm">
+                    <p className="font-bold mb-0.5 underline text-gray-900">Terms & Policy:</p>
+                    {profile?.terms ? (
+                        <p className="whitespace-pre-wrap">{profile.terms}</p>
+                    ) : (
+                        <ol className="list-decimal pl-3 space-y-0.5 whitespace-normal">
+                            <li>Please note that check in time is 02.00 pm and check out time 12.00 pm.</li>
+                            <li>All non guaranteed reservations will automatically be released on 6 pm.</li>
+                            <li>The Hotel will charge 1 night for guaranteed reservations that have not been canceling before the day of arrival.</li>
+                        </ol>
+                    )}
                 </div>
 
                 {/* Add standard global print styles directly inline to ensure scaling and no extra margin pages */}

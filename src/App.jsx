@@ -10,6 +10,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import UserManagement from './pages/UserManagement'
 import RoleBasedHome from './components/RoleBasedHome'
 import RoomAvailability from './pages/RoomAvailability'
+import HotelProfile from './pages/HotelProfile'
+import LogBook from './pages/LogBook'
 
 function App() {
     return (
@@ -36,10 +38,12 @@ function App() {
                         <Route path="/payment-success" element={<PaymentSuccess />} />
                         <Route path="/confirmation" element={<ReservationConfirmation />} />
                         <Route path="/rooms" element={<RoomAvailability />} />
+                        <Route path="/logbook" element={<LogBook />} />
                         
                         {/* Accessible to Superadmin & Admin for viewing list, but Superadmin can create */}
                         <Route element={<ProtectedRoute allowedRoles={['Superadmin', 'Admin']} />}>
                             <Route path="/users" element={<UserManagement />} />
+                            <Route path="/hotel-profile" element={<HotelProfile />} />
                         </Route>
                     </Route>
                 </Route>

@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import CustomAlert from '../components/CustomAlert';
 
-const ROOM_PRICES = {
+// fallback
+const DEFAULT_PRICES = {
     Standard: 1500000,
     Deluxe: 2500000,
     Suite: 4000000,
@@ -34,10 +35,29 @@ export default function PaymentPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [navigatingOut, setNavigatingOut] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'info' });
+    const [roomPrices, setRoomPrices] = useState(DEFAULT_PRICES);
+
+    useMemo(() => {
+        const fetchRates = async () => {
+            try {
+                const { data } = await supabase.from('room_rates').select('room_type, base_price, seasonal_price');
+                if (data && data.length > 0) {
+                    const priceMap = { ...DEFAULT_PRICES };
+                    data.forEach(r => {
+                        priceMap[r.room_type] = r.seasonal_price || r.base_price;
+                    });
+                    setRoomPrices(priceMap);
+                }
+            } catch (error) {
+                console.error("Fetch rates error:", error);
+            }
+        };
+        fetchRates();
+    }, []);
 
     const typesList = (reservationData.roomType || '').split(',').map(t => t.trim()).filter(Boolean);
-    const totalDailyRate = typesList.reduce((sum, t) => sum + (ROOM_PRICES[t] || 0), 0);
-    const roomRate = typesList.length > 0 ? totalDailyRate / typesList.length : (ROOM_PRICES[reservationData.roomType] || 0);
+    const totalDailyRate = typesList.reduce((sum, t) => sum + (roomPrices[t] || 0), 0);
+    const roomRate = typesList.length > 0 ? totalDailyRate / typesList.length : (roomPrices[reservationData.roomType] || 0);
 
     const totalNights = useMemo(() => {
         if (reservationData.arrivalDate && reservationData.departureDate) {
