@@ -479,13 +479,13 @@ function DetailModal({ activity, onClose, onPrint, onCheckout, onCancel, isCheck
                             {isCheckingOut ? 'Memproses...' : 'Check Out Sekarang'}
                         </button>
                     )}
-                    {isUpcoming && (
+                    {isUpcoming && activity.status !== 'canceled' && (
                         <button
                             onClick={() => onCancel(activity.id)}
                             className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold shadow-md hover:shadow-lg transition-all text-sm flex items-center gap-2"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                             Cancel Reservasi
                         </button>
@@ -567,7 +567,7 @@ export default function Dashboard() {
 
             const { data: allDates } = await supabase
                 .from('transactions')
-                .select('arrival_date, departure_date, room_no');
+                .select('arrival_date, departure_date, room_no, status');
             
             let activeCount = 0;
             let activeRooms = 0;
@@ -582,6 +582,9 @@ export default function Dashboard() {
                 today.setHours(0,0,0,0);
                 
                 allDates.forEach(t => {
+                    // Skip canceled transactions from stats
+                    if (t.status === 'canceled') return;
+
                     const arrival = new Date(t.arrival_date);
                     arrival.setHours(0,0,0,0);
                     const departure = new Date(t.departure_date);
@@ -606,7 +609,7 @@ export default function Dashboard() {
 
             const { data: recentResData } = await supabase
                 .from('transactions')
-                .select('id, booking_no, guest_name, email, phone, room_no, room_type, number_of_rooms, number_of_persons, arrival_date, departure_date, total_nights, room_rate, subtotal, tax, service_charge, grand_total, payment_method, payment_ref, nationality, company, receptionist, notes, created_at')
+                .select('id, booking_no, guest_name, email, phone, room_no, room_type, number_of_rooms, number_of_persons, arrival_date, departure_date, total_nights, room_rate, subtotal, tax, service_charge, grand_total, payment_method, payment_ref, nationality, company, receptionist, notes, status, created_at')
                 .order('created_at', { ascending: false })
                 .limit(50);
 
@@ -708,14 +711,14 @@ export default function Dashboard() {
         setAlertConfig({
             isOpen: true,
             title: 'Konfirmasi Pembatalan',
-            message: 'Apakah Anda yakin ingin membatalkan reservasi ini? Data akan dihapus permanen dari sistem.',
+            message: 'Apakah Anda yakin ingin membatalkan reservasi ini? Status akan diubah menjadi "Dibatalkan".',
             type: 'confirm',
             onConfirm: async () => {
                 setAlertConfig(prev => ({ ...prev, isOpen: false }));
                 try {
                     const { error } = await supabase
                         .from('transactions')
-                        .delete()
+                        .update({ status: 'canceled' })
                         .eq('id', id);
 
                     if (error) throw error;
@@ -1149,7 +1152,11 @@ export default function Dashboard() {
                             dep.setHours(0,0,0,0);
 
                             let badgeClass, badgeIcon, badgeText;
-                            if (now >= arr && now < dep) {
+                            if (activity.status === 'canceled') {
+                                badgeClass = 'bg-red-50 text-red-700 border-red-200';
+                                badgeIcon = <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>;
+                                badgeText = 'Dibatalkan';
+                            } else if (now >= arr && now < dep) {
                                 badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                                 badgeIcon = <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>;
                                 badgeText = 'Aktif';
@@ -1238,15 +1245,15 @@ export default function Dashboard() {
                                         </button>
                                     )}
 
-                                    {/* Cancel Button - Only for Upcoming */}
-                                    {badgeText === 'Akan Datang' && (
+                                    {/* Cancel Button - Only for Upcoming (not already canceled) */}
+                                    {badgeText === 'Akan Datang' && activity.status !== 'canceled' && (
                                         <button
                                             onClick={() => handleCancel(activity.id)}
                                             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50/80 hover:bg-red-100/80 text-red-700 font-semibold text-xs border border-red-200/50 transition-all hover:shadow-sm active:scale-95 h-[34px]"
                                             title="Cancel Reservasi"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                             </svg>
                                             Cancel
                                         </button>
