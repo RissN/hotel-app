@@ -393,7 +393,7 @@ const UserManagement = () => {
     );
 
     return (
-        <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen animate-page-entrance">
+        <div className="p-6 md:p-8 w-full min-h-screen animate-page-entrance">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
@@ -543,7 +543,8 @@ const UserManagement = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pengguna</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama Lengkap</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role Akses</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Bergabung Sejak</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
@@ -552,7 +553,7 @@ const UserManagement = () => {
                         <tbody className="divide-y divide-slate-100">
                             {filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
                                         <div className="flex flex-col items-center justify-center">
                                             <svg className="w-12 h-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                             <p className="text-lg font-medium text-slate-700">Tidak ada data pengguna</p>
@@ -571,11 +572,11 @@ const UserManagement = () => {
                                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700 flex items-center justify-center font-bold text-lg shrink-0 shadow-sm border border-white">
                                                         {initial}
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm font-bold text-slate-800 truncate">{u.username || displayEmail}</p>
-                                                        <p className="text-xs text-slate-400 truncate mt-0.5">{displayEmail}</p>
-                                                    </div>
+                                                    <p className="text-sm font-bold text-slate-800 truncate max-w-[200px]">{u.username || '-'}</p>
                                                 </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-slate-600 truncate">
+                                                {displayEmail}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-sm

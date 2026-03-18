@@ -533,7 +533,11 @@ export default function Dashboard() {
         totalReservations: 0,
         activeReservations: 0,
         completedReservations: 0,
-        upcomingReservations: 0
+        upcomingReservations: 0,
+        totalRooms: 0,
+        activeRooms: 0,
+        completedRooms: 0,
+        upcomingRooms: 0
     });
     const [recentActivities, setRecentActivities] = useState([]);
     const [allTransactions, setAllTransactions] = useState([]);
@@ -563,11 +567,15 @@ export default function Dashboard() {
 
             const { data: allDates } = await supabase
                 .from('transactions')
-                .select('arrival_date, departure_date');
+                .select('arrival_date, departure_date, room_no');
             
             let activeCount = 0;
+            let activeRooms = 0;
             let completedCount = 0;
+            let completedRooms = 0;
             let upcomingCount = 0;
+            let upcomingRooms = 0;
+            let totalRooms = 0;
             
             if (allDates) {
                 const today = new Date();
@@ -579,12 +587,18 @@ export default function Dashboard() {
                     const departure = new Date(t.departure_date);
                     departure.setHours(0,0,0,0);
                     
+                    const rooms = t.room_no ? t.room_no.split(',').map(n => n.trim()).length : 0;
+                    totalRooms += rooms;
+                    
                     if (today >= arrival && today < departure) {
                         activeCount++;
+                        activeRooms += rooms;
                     } else if (today >= departure) {
                         completedCount++;
+                        completedRooms += rooms;
                     } else {
                         upcomingCount++;
+                        upcomingRooms += rooms;
                     }
                 });
             }
@@ -609,7 +623,11 @@ export default function Dashboard() {
                 totalReservations: totalReservations || 0,
                 activeReservations: activeCount,
                 completedReservations: completedCount,
-                upcomingReservations: upcomingCount
+                upcomingReservations: upcomingCount,
+                totalRooms: totalRooms,
+                activeRooms: activeRooms,
+                completedRooms: completedRooms,
+                upcomingRooms: upcomingRooms
             });
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
@@ -727,34 +745,50 @@ export default function Dashboard() {
     const cards = [
         {
             title: 'Total Reservasi',
-            value: stats.totalReservations,
-            gradient: 'from-blue-500 to-cyan-400',
+            value: stats.totalRooms,
+            subValue: 'Kamar',
+            color: 'indigo',
+            bgColor: 'bg-indigo-50 border-indigo-100 text-indigo-700',
+            iconColor: 'bg-indigo-600 text-white',
+            shadow: 'shadow-indigo-500/10',
             icon: (
-                <svg className="w-8 h-8 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
             )
         },
         {
             title: 'Reservasi Aktif',
-            value: stats.activeReservations,
-            gradient: 'from-emerald-500 to-teal-400',
+            value: stats.activeRooms,
+            subValue: 'Kamar Terisi',
+            color: 'rose',
+            bgColor: 'bg-rose-50 border-rose-100 text-rose-700',
+            iconColor: 'bg-rose-500 text-white',
+            shadow: 'shadow-rose-500/10',
             icon: (
-                <svg className="w-8 h-8 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             )
         },
         {
             title: 'Reservasi Selesai',
-            value: stats.completedReservations,
-            gradient: 'from-purple-500 to-indigo-400',
+            value: stats.completedRooms,
+            subValue: 'Kamar',
+            color: 'emerald',
+            bgColor: 'bg-emerald-50 border-emerald-100 text-emerald-700',
+            iconColor: 'bg-emerald-600 text-white',
+            shadow: 'shadow-emerald-500/10',
             icon: (
-                <svg className="w-8 h-8 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
             )
         },
         {
             title: 'Reservasi Akan Datang',
-            value: stats.upcomingReservations,
-            gradient: 'from-orange-500 to-amber-400',
+            value: stats.upcomingRooms,
+            subValue: 'Kamar Booking',
+            color: 'sky',
+            bgColor: 'bg-sky-50 border-sky-100 text-sky-700',
+            iconColor: 'bg-sky-500 text-white',
+            shadow: 'shadow-sky-500/10',
             icon: (
-                <svg className="w-8 h-8 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             )
         }
     ];
@@ -921,17 +955,24 @@ export default function Dashboard() {
                 {cards.map((card, index) => (
                     <div
                         key={index}
-                        className={`relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${card.gradient} text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group`}
+                        className={`relative overflow-hidden rounded-3xl p-6 bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:${card.shadow} hover:-translate-y-1 transition-all duration-300 group`}
                     >
-                        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/20 rounded-full blur-xl group-hover:bg-white/30 transition-colors"></div>
-                        <div className="relative z-10 flex justify-between items-start">
-                            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                        <div className="absolute inset-x-0 bottom-0 h-1 bg-current opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                        <div className="relative z-10 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-slate-400 font-bold text-xs uppercase tracking-widest">{card.title}</h3>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <p className="text-4xl font-black text-slate-800 tracking-tight tabular-nums">
+                                        {card.value}
+                                    </p>
+                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg ${card.bgColor} tracking-wide`}>
+                                        {card.subValue}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className={`${card.iconColor} p-3 rounded-2xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
                                 {card.icon}
                             </div>
-                        </div>
-                        <div className="relative z-10 mt-6">
-                            <h3 className="text-white/80 font-medium text-lg">{card.title}</h3>
-                            <p className="text-4xl font-bold mt-1 tracking-tight">{card.value}</p>
                         </div>
                     </div>
                 ))}
