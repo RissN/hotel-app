@@ -12,7 +12,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Inisialisasi hanya jika URL dan Key valid agar tidak error "URL is required" yang menyebabkan blank page
 export const supabase = supabaseUrl && supabaseAnonKey 
-    ? createClient(supabaseUrl, supabaseAnonKey) 
+    ? createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storage: window.localStorage,
+        },
+    }) 
     : {
         from: () => ({
             insert: () => {

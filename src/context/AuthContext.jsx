@@ -17,17 +17,49 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         // Initial session fetch
         const initializeAuth = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (error) {
-                console.error("Error fetching session:", error);
-            }
-            if (session?.user) {
-                setUser(session.user);
-                await fetchUserRole(session.user.id);
-            } else {
+            try {
+                // First, try to get the stored session
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error("Error fetching session:", error);
+                    setLoading(false);
+                    return;
+                }
+
+                if (session?.user) {
+                    // Check if the access token has expired by decoding it
+                    // If expired, refresh the session to get a new one
+                    const tokenExp = session.expires_at; // Unix timestamp in seconds
+                    const now = Math.floor(Date.now() / 1000);
+                    
+                    if (tokenExp && now >= tokenExp) {
+                        // Token is expired, try refreshing
+                        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                        if (refreshError || !refreshData?.session) {
+                            // Refresh failed — session is truly expired, user must re-login
+                            console.error("Session refresh failed:", refreshError?.message);
+                            setUser(null);
+                            setRole(null);
+                            setLoading(false);
+                            return;
+                        }
+                        // Use the refreshed session
+                        setUser(refreshData.session.user);
+                        await fetchUserRole(refreshData.session.user.id);
+                    } else {
+                        // Token is still valid
+                        setUser(session.user);
+                        await fetchUserRole(session.user.id);
+                    }
+                } else {
+                    setLoading(false);
+                }
+            } catch (err) {
+                console.error("Auth initialization error:", err);
                 setLoading(false);
             }
-            
+
             // Listen for auth changes
             const { data: { subscription } } = supabase.auth.onAuthStateChange(
                 async (_event, session) => {
