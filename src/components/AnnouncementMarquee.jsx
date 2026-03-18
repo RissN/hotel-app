@@ -19,15 +19,15 @@ const AnnouncementMarquee = () => {
             setIsVisible(true);
             sessionStorage.setItem('announcement_shown', 'true');
 
-            // Start exit animation after 14 seconds
+            // Start exit animation after 19 seconds
             const exitTimer = setTimeout(() => {
                 setIsExiting(true);
-            }, 14000);
+            }, 19000);
 
-            // Auto-hide after 15 seconds (allowing 1s for animation)
+            // Auto-hide after 20 seconds (allowing 1s for animation)
             const hideTimer = setTimeout(() => {
                 setIsVisible(false);
-            }, 15000);
+            }, 20000);
 
             return () => {
                 clearTimeout(exitTimer);
