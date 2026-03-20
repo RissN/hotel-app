@@ -35,11 +35,18 @@ Sebuah aplikasi web modern (berbasis React dan Supabase) untuk manajemen registr
 - **Kode Referensi Unik:** Otomatis dihasilkan untuk setiap transaksi non-tunai.
 - **Cetak Invoice A4:** Konfirmasi reservasi siap cetak dalam format A4 Portrait.
 
-### UI/UX
-- **Premium Design:** Gradient backgrounds, glassmorphism, micro-animations.
-- **Custom Alert System:** Notifikasi dan konfirmasi elegan menggantikan alert browser bawaan.
-- **Animated Page Transitions:** Transisi halus antar halaman dan logout animation.
-- **Responsive:** Kompatibel di desktop dan tablet.
+### Manajemen Hotel & Ketersediaan Kamar
+- **Profil Hotel & Tarif:** Pengaturan informasi hotel dan harga kamar (Room Rate) dengan antarmuka layar penuh (full-width) yang modern.
+- **Pemantauan Status Kamar:** Update ketersediaan kamar secara real-time yang secara akurat menampilkan status Terisi, Tersedia, dan 'Upcoming'.
+- **Safe Cancellation:** Modifikasi logika pembatalan (Cancel) di mana data transaksi tidak dihapus, melainkan diubah statusnya menjadi "Canceled" guna menjaga riwayat data transaksi.
+- **Smart Announcement:** Pengumuman berjalan (running text) berbasis `sessionStorage`, hanya muncul sekali per sesi login agar tidak mengganggu keasyikan pengguna.
+
+### UI/UX & Tema
+- **Dynamic Login Page:** Halaman login dengan background animasi gradient yang dinamis dan memikat.
+- **Light & Dark Mode Polish:** Polesan visual secara detail pada Light Mode (peningkatan kontras shadow) dan perbaikan tata letak.
+- **Optimalisasi Layout:** Perombakan formasi tampilan (overhaul UI) pada area Dashboard dan User Management untuk kenyamanan pembacaan data.
+- **Custom Alert & Redirection:** Notifikasi kustom tanpa menggunakan alert browser yang monoton, termasuk kelancaran transisi logout dengan automatic redirection.
+- **Responsif & Modern:** Tampilan responsif adaptif untuk desktop & tablet via utilitas modern Tailwind CSS v4.
 
 ---
 
