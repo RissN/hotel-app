@@ -9,6 +9,7 @@ Sebuah aplikasi web modern (berbasis React dan Supabase) untuk manajemen registr
 ### Autentikasi & Keamanan
 - **Role-Based Access Control (RBAC):** Memisahkan hak akses antara `Superadmin`, `Admin`, dan `Resepsionis`.
 - **Supabase Row Level Security (RLS):** Keamanan diterapkan di level database — bukan hanya di frontend. Bahkan jika user memanipulasi browser, RLS memblokir akses di backend.
+- **Cookie-Based Token Storage:** Token autentikasi disimpan di cookies (bukan `localStorage`) dengan atribut keamanan `Secure`, `SameSite=Lax`, dan auto-expire 30 hari — lebih aman dari serangan XSS.
 - **Auto Role Re-sync:** Role otomatis di-refresh saat user kembali ke tab browser, menangkap perubahan role oleh admin secara real-time.
 - **Production Console Strip:** `console.log` secara otomatis dihapus saat build production via esbuild untuk menjaga keamanan dan performa. `console.error` dan `console.warn` tetap aktif.
 
@@ -59,7 +60,7 @@ Sebuah aplikasi web modern (berbasis React dan Supabase) untuk manajemen registr
 | **Routing** | [React Router DOM](https://reactrouter.com/) |
 | **Charts** | [Recharts](https://recharts.org/) |
 | **Backend & DB** | [Supabase](https://supabase.com/) (PostgreSQL + Auth + RLS) |
-| **Security** | Supabase RLS + `SECURITY DEFINER` RPC Functions |
+| **Security** | Supabase RLS + `SECURITY DEFINER` RPC + Cookie-Based Token Storage |
 | **Deployment** | [Vercel](https://vercel.com/) (Dianjurkan) |
 
 ---
