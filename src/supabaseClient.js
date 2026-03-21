@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { cookieStorage } from './utils/cookieStorage'
 
 const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -17,7 +18,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
             persistSession: true,
             autoRefreshToken: true,
             detectSessionInUrl: true,
-            storage: window.localStorage,
+            storage: cookieStorage,
         },
     }) 
     : {
