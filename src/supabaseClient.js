@@ -30,3 +30,19 @@ export const supabase = supabaseUrl && supabaseAnonKey
         })
     };
 
+// Bersihkan data Supabase auth lama dari localStorage (sisa sebelum migrasi ke cookie)
+try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-')) {
+            keysToRemove.push(key);
+        }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    if (keysToRemove.length > 0) {
+        console.info(`[Auth Cleanup] Removed ${keysToRemove.length} stale key(s) from localStorage.`);
+    }
+} catch (e) {
+    // Abaikan error (misalnya di SSR atau storage tidak tersedia)
+}
