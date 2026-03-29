@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import CustomAlert from '../components/CustomAlert';
+import LoadingScreen from '../components/LoadingScreen';
 
 const LogBook = () => {
     const { user, role } = useAuth();
@@ -71,11 +72,7 @@ const LogBook = () => {
         }
     };
 
-    if (loading && logs.length === 0) return (
-        <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-        </div>
-    );
+    if (loading && logs.length === 0) return <LoadingScreen message="Memuat Log Book..." />;
 
     return (
         <div className="p-6 md:p-8 w-full min-h-screen animate-page-entrance bg-slate-50/50">

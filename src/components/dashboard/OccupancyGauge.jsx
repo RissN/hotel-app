@@ -1,16 +1,22 @@
 import React from 'react';
 
-const OccupancyGauge = ({ totalRooms, occupiedRooms }) => {
+const OccupancyGauge = ({ totalRooms, occupiedRooms, roomTypeCounts = { Standard: 0, Deluxe: 0, Suite: 0 } }) => {
     const percentage = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
     const radius = 36;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (percentage / 100) * circumference;
 
+    const breakdown = [
+        { label: 'Standard', count: roomTypeCounts.Standard, total: 70, color: 'bg-indigo-500' },
+        { label: 'Deluxe', count: roomTypeCounts.Deluxe, total: 20, color: 'bg-rose-500' },
+        { label: 'Suite', count: roomTypeCounts.Suite, total: 10, color: 'bg-amber-500' }
+    ];
+
     return (
-        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col items-center justify-center relative overflow-hidden h-full group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/20 to-transparent pointer-events-none" />
             
-            <h3 className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 w-full">TINGKAT HUNIAN</h3>
+            <h3 className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mb-4 w-full text-center">TINGKAT HUNIAN</h3>
             
             <div className="relative flex items-center justify-center w-32 h-32">
                 <svg className="w-full h-full transform -rotate-90">
@@ -53,7 +59,7 @@ const OccupancyGauge = ({ totalRooms, occupiedRooms }) => {
                 </div>
             </div>
             
-            <div className="mt-4 flex items-center gap-4 w-full">
+            <div className="mt-4 flex items-center gap-4 w-full pb-4 border-b border-slate-50">
                 <div className="flex-1 text-center">
                     <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total</p>
                     <p className="text-sm font-black text-slate-800">{totalRooms}</p>
@@ -63,6 +69,24 @@ const OccupancyGauge = ({ totalRooms, occupiedRooms }) => {
                     <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Sisa</p>
                     <p className="text-sm font-black text-emerald-600">{totalRooms - occupiedRooms}</p>
                 </div>
+            </div>
+
+            {/* Room Type Breakdown */}
+            <div className="w-full mt-4 space-y-3">
+                {breakdown.map((item, i) => (
+                    <div key={i}>
+                        <div className="flex justify-between text-[10px] font-bold mb-1">
+                            <span className="uppercase tracking-widest text-slate-400">{item.label}</span>
+                            <span className="tabular-nums text-slate-600">{item.count}/{item.total}</span>
+                        </div>
+                        <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                                className={`${item.color} h-full rounded-full transition-all duration-1000 ease-out`} 
+                                style={{ width: `${(item.count / item.total) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import CustomAlert from '../components/CustomAlert';
 import { useAuth } from '../context/AuthContext';
+import LoadingScreen from '../components/LoadingScreen';
 
 const HotelProfile = () => {
     const { role: myRole } = useAuth();
@@ -109,11 +110,7 @@ const HotelProfile = () => {
         }
     };
 
-    if (loading) return (
-        <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-        </div>
-    );
+    if (loading) return <LoadingScreen message="Memuat Profil Hotel..." />;
 
     return (
         <div className="p-6 md:p-8 w-full min-h-screen animate-page-entrance">

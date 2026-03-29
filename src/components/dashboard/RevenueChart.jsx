@@ -6,7 +6,7 @@ import {
 
 const RevenueChart = ({ data, range, chartSubtitle, ranges, setRange, formatIDR }) => {
     return (
-        <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100 flex flex-col group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="bg-white rounded-3xl p-5 md:p-6 shadow-sm border border-slate-100 flex flex-col h-full group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
                 <div>
                     <h3 className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mb-0.5">PERFORMA PENDAPATAN</h3>
@@ -29,7 +29,7 @@ const RevenueChart = ({ data, range, chartSubtitle, ranges, setRange, formatIDR 
                 </div>
             </div>
             
-            <div className="h-48 sm:h-56 w-full mt-auto">
+            <div className="flex-1 w-full min-h-[200px] mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                         <defs>

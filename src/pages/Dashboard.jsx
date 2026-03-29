@@ -10,6 +10,7 @@ import StatCard from '../components/dashboard/StatCard';
 import OccupancyGauge from '../components/dashboard/OccupancyGauge';
 import TodayAtAGlance from '../components/dashboard/TodayAtAGlance';
 import RevenueChart from '../components/dashboard/RevenueChart';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Dashboard() {
     const { role } = useAuth();
@@ -18,7 +19,8 @@ export default function Dashboard() {
 
     const [stats, setStats] = useState({
         totalReservations: 0,
-        activeRooms: 0
+        activeRooms: 0,
+        roomTypeCounts: { Standard: 0, Deluxe: 0, Suite: 0 }
     });
 
     const [trends, setTrends] = useState({
@@ -63,6 +65,14 @@ export default function Dashboard() {
             if (txError) throw txError;
 
             let activeRooms = 0;
+            let roomTypeCounts = { Standard: 0, Deluxe: 0, Suite: 0 };
+            
+            const getRoomType = (roomNo) => {
+                const num = parseInt(roomNo.toString().trim().slice(-2));
+                if (num <= 14) return 'Standard';
+                if (num <= 18) return 'Deluxe';
+                return 'Suite';
+            };
             
             // Trend counters
             let transactionsToday = 0, transactionsYesterday = 0;
@@ -83,6 +93,12 @@ export default function Dashboard() {
                     
                     if (today >= arr && today < dep) {
                         activeRooms += roomsCount;
+                        if (t.room_no) {
+                            t.room_no.split(',').forEach(rn => {
+                                const type = getRoomType(rn);
+                                roomTypeCounts[type]++;
+                            });
+                        }
                     }
 
                     // Trend calculations
@@ -139,7 +155,8 @@ export default function Dashboard() {
 
             setStats({
                 totalReservations: allTx.length,
-                activeRooms: activeRooms
+                activeRooms: activeRooms,
+                roomTypeCounts: roomTypeCounts
             });
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
@@ -296,12 +313,7 @@ export default function Dashboard() {
         </div>
     );
 
-    if (loading) return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 gap-4">
-            <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
-            <p className="text-xs font-black uppercase tracking-[0.2em] animate-pulse">Synchronizing Data...</p>
-        </div>
-    );
+    if (loading) return <LoadingScreen message="Menyinkronkan data..." />;
 
     return (
         <div className="px-6 py-6 space-y-6 animate-page-entrance max-w-[1600px] mx-auto">
@@ -349,7 +361,7 @@ export default function Dashboard() {
                     />
                 </div>
                 <div className="xl:col-span-1">
-                    <OccupancyGauge totalRooms={TOTAL_HOTEL_ROOMS} occupiedRooms={stats.activeRooms} />
+                    <OccupancyGauge totalRooms={TOTAL_HOTEL_ROOMS} occupiedRooms={stats.activeRooms} roomTypeCounts={stats.roomTypeCounts} />
                 </div>
             </div>
 

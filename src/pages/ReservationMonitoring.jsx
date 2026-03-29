@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../supabaseClient';
 import CustomAlert from '../components/CustomAlert';
 import DetailModal, { printTransaction } from '../components/ReservationDetailModal';
+import LoadingScreen from '../components/LoadingScreen';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -361,17 +362,7 @@ export default function ReservationMonitoring() {
     const fmtDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
     // ─── Loading state ─────────────────────────
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-slate-500 gap-4">
-                <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full border-4 border-indigo-100"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-500 animate-spin"></div>
-                </div>
-                <p className="text-sm font-medium text-slate-400">Memuat Data Reservasi...</p>
-            </div>
-        );
-    }
+    if (loading) return <LoadingScreen message="Memuat Data Reservasi..." />;
 
     const hasActiveFilters = searchTerm || roomTypeFilter !== 'Semua' || startDate || endDate;
 
