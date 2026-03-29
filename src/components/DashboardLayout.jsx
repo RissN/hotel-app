@@ -87,7 +87,7 @@ const DashboardLayout = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row print:bg-white">
+        <div className="md:h-screen md:overflow-hidden bg-slate-50 flex flex-col md:flex-row print:bg-white print:h-auto print:overflow-visible">
             {/* ── Logout Animation Overlay ── */}
             {loggingOut && (
                 <div
@@ -165,7 +165,7 @@ const DashboardLayout = () => {
                     </div>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-8 overflow-y-auto custom-scrollbar">
+                <nav className="flex-1 p-4 space-y-8 custom-scrollbar">
                     {menuGroups.map((group) => {
                         const visibleItems = group.items.filter(item => item.roles.includes(role));
                         if (visibleItems.length === 0) return null;
@@ -221,7 +221,7 @@ const DashboardLayout = () => {
 
             {/* Main Content Area */}
             <main
-                className="flex-1 overflow-x-hidden min-h-screen relative"
+                className="flex-1 h-full overflow-y-auto overflow-x-hidden relative custom-scrollbar-main"
                 style={loggingOut ? { animation: 'logoutContentFade 0.5s ease-in forwards' } : {}}
             >
                 <AnnouncementMarquee />
@@ -290,6 +290,32 @@ const DashboardLayout = () => {
                         opacity: 0;
                         transform: scale(0.97);
                     }
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                }
+                .custom-scrollbar-main::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar-main::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar-main::-webkit-scrollbar-thumb {
+                    background: #cbd5e1;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar-main::-webkit-scrollbar-thumb:hover {
+                    background: #94a3b8;
                 }
             `}</style>
         </div>
