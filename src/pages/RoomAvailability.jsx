@@ -185,11 +185,11 @@ export default function RoomAvailability() {
         <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden animate-page-entrance">
             {/* Main Content Area */}
             <div className="flex-1 p-6 lg:p-8 flex flex-col overflow-hidden">
-                <header className="mb-6 shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-indigo-800 to-purple-800 rounded-3xl p-8 shadow-lg shadow-indigo-500/20 text-white relative overflow-hidden">
+                <header className="mb-4 shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gradient-to-r from-indigo-800 to-purple-800 rounded-2xl p-6 shadow-lg shadow-indigo-500/20 text-white relative overflow-hidden">
                     <div className="absolute inset-0 bg-white/5 opacity-50 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 0%, transparent 20%)', backgroundSize: '20px 20px' }} />
                     <div className="relative z-10 w-full lg:w-auto">
-                        <h1 className="text-3xl font-extrabold tracking-tight">Ketersediaan Kamar</h1>
-                        <p className="text-indigo-200 mt-2 text-md">Monitoring hunian hotel secara real-time</p>
+                        <h1 className="text-2xl font-extrabold tracking-tight">Ketersediaan Kamar</h1>
+                        <p className="text-indigo-200 mt-1 text-xs">Monitoring hunian hotel secara real-time</p>
                     </div>
                     <div className="relative z-10 flex flex-wrap items-center gap-4 shrink-0 bg-white/10 backdrop-blur border border-white/20 rounded-2xl px-5 py-3 shadow-md">
                         <div className="flex items-center gap-2">
@@ -211,10 +211,10 @@ export default function RoomAvailability() {
                     </div>
                 </header>
 
-                <div key={currentPage} className="space-y-12 pb-4 flex-1 animate-slide-in">
+                <div key={currentPage} className="space-y-6 flex-1 animate-slide-in">
                     {pagedFloors.map(floor => (
                         <section key={floor} className="relative">
-                            <div className="flex items-center gap-4 mb-6">
+                            <div className="flex items-center gap-4 mb-3">
                                 <div className="bg-slate-900 text-white w-12 h-12 rounded-xl flex flex-col items-center justify-center shadow-lg transform -rotate-3">
                                     <span className="text-[10px] font-black uppercase opacity-60 leading-none">Lt</span>
                                     <span className="text-xl font-black leading-none">{floor}</span>
@@ -325,7 +325,7 @@ export default function RoomAvailability() {
                 </div>
 
                 {/* Pagination Controls */}
-                <div className="mt-auto pt-4 shrink-0">
+                <div className="pt-4 pb-1 shrink-0 border-t border-slate-200/60 bg-slate-50 -mx-6 lg:-mx-8 px-6 lg:px-8">
                 <div className="flex items-center justify-center gap-3 pb-3">
                     <button
                         onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
