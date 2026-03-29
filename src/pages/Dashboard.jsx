@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
@@ -39,6 +39,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [jakartaTime, setJakartaTime] = useState('');
+    const currentDayRef = useRef(getLocalDateString());
 
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ 
@@ -169,11 +170,19 @@ export default function Dashboard() {
 
     useEffect(() => {
         const tick = () => {
-            const now = new Date().toLocaleString('id-ID', {
+            const now = new Date();
+            const timeStr = now.toLocaleString('id-ID', {
                 timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                 hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
             });
-            setJakartaTime(now);
+            setJakartaTime(timeStr);
+            
+            // Auto-refresh when day changes
+            const todayStr = getLocalDateString(now);
+            if (todayStr !== currentDayRef.current) {
+                currentDayRef.current = todayStr;
+                fetchDashboardData();
+            }
         };
         tick();
         const id = setInterval(tick, 1000);
