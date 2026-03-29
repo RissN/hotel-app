@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import CustomAlert from '../components/CustomAlert';
 import DetailModal, { printTransaction } from '../components/ReservationDetailModal';
 import LoadingScreen from '../components/LoadingScreen';
+import { getLocalDateString } from '../utils/dateUtils';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -198,7 +199,7 @@ export default function ReservationMonitoring() {
                 setAlertConfig(prev => ({ ...prev, isOpen: false }));
                 setIsCheckingOut(true);
                 try {
-                    const todayDate = new Date().toISOString().split('T')[0];
+                    const todayDate = getLocalDateString();
                     const { error } = await supabase
                         .from('transactions')
                         .update({ departure_date: todayDate })

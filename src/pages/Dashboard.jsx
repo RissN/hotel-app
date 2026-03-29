@@ -11,6 +11,7 @@ import OccupancyGauge from '../components/dashboard/OccupancyGauge';
 import TodayAtAGlance from '../components/dashboard/TodayAtAGlance';
 import RevenueChart from '../components/dashboard/RevenueChart';
 import LoadingScreen from '../components/LoadingScreen';
+import { getLocalDateString, getYesterdayDateString } from '../utils/dateUtils';
 
 export default function Dashboard() {
     const { role } = useAuth();
@@ -54,8 +55,8 @@ export default function Dashboard() {
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
             
-            const todayStr = today.toISOString().split('T')[0];
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            const todayStr = getLocalDateString(today);
+            const yesterdayStr = getLocalDateString(yesterday);
 
             // 1. Fetch Stats & Occupancy Data
             const { data: allTx, error: txError } = await supabase
@@ -156,7 +157,8 @@ export default function Dashboard() {
             setStats({
                 totalReservations: allTx.length,
                 activeRooms: activeRooms,
-                roomTypeCounts: roomTypeCounts
+                roomTypeCounts: roomTypeCounts,
+                revenueToday: revenueToday
             });
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
@@ -298,7 +300,9 @@ export default function Dashboard() {
                                 </div>
                                 <div className="text-right shrink-0">
                                     <p className="text-[10px] font-black text-slate-800 tabular-nums">{formatIDR(item.grand_total)}</p>
-                                    <p className="text-[9px] text-slate-400 uppercase font-bold">{new Date(item.created_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' })}</p>
+                                    <p className="text-[9px] text-slate-400 uppercase font-bold">
+                                        {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {new Date(item.created_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' })}
+                                    </p>
                                 </div>
                             </div>
                         ))}
@@ -347,7 +351,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 <StatCard title="Total Reservations" value={stats.totalReservations} subValue="Bookings" color="indigo" trend={trends.total} delay={0.1} icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>} />
                 <StatCard title="Active Rooms" value={stats.activeRooms} subValue="Occupied" color="rose" trend={trends.active} delay={0.2} icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
-                <StatCard title="Today Revenue" value={formatIDR(trends.revenue >= 0 ? trends.revenue : 0)} subValue="Income" color="emerald" trend={trends.revenue} delay={0.3} icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+                <StatCard title="Today Revenue" value={formatIDR(stats.revenueToday || 0)} subValue="Income" color="emerald" trend={trends.revenue} delay={0.3} icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
                 <StatCard title="Check-out Today" value={todayCheckOuts.length} subValue="Rooms" color="amber" delay={0.4} icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>} />
             </div>
 

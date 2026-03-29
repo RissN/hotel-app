@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import LoadingScreen from '../components/LoadingScreen';
+import { getLocalDateString } from '../utils/dateUtils';
 
 // fallback
 const DEFAULT_PRICES = {
@@ -71,7 +72,7 @@ export default function RoomAvailability() {
 
     const fetchOccupancy = async () => {
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             
             // Fetch transactions that are currently active
             // arrival_date <= today AND departure_date > today

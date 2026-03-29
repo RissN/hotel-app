@@ -262,12 +262,15 @@ export function printTransaction(tx) {
 export default function DetailModal({ activity, onClose, onPrint, onCheckout, onCancel, isCheckingOut }) {
     if (!activity) return null;
 
-    const now = new Date();
-    now.setHours(0,0,0,0);
-    const arr = new Date(activity.arrival_date);
-    const dep = new Date(activity.departure_date);
-    const isAktif = now >= arr && now < dep;
-    const isUpcoming = now < arr;
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const arr = new Date(activity.arrival_date); arr.setHours(0, 0, 0, 0);
+    const dep = new Date(activity.departure_date); dep.setHours(0, 0, 0, 0);
+    
+    // Use the same logic as getReservationStatus in ReservationMonitoring.jsx
+    const isCanceled = activity.status === 'canceled';
+    const isAktif = !isCanceled && (now >= arr && now < dep);
+    const isUpcoming = !isCanceled && (now < arr);
+    const isCompleted = !isCanceled && (now >= dep);
 
     const fmt = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
     const payLabel = PAYMENT_METHOD_LABEL[activity.payment_method] || activity.payment_method || '-';
