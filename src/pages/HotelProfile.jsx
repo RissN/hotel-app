@@ -117,9 +117,13 @@ const HotelProfile = () => {
 
     return (
         <div className="p-6 md:p-8 w-full min-h-screen animate-page-entrance">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Pengaturan Profil Hotel</h1>
-                <p className="text-slate-500 mt-1">Kelola informasi dasar hotel yang akan digunakan di sistem dan cetak nota.</p>
+            <header className="mb-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-indigo-800 to-purple-800 rounded-3xl p-8 shadow-lg shadow-indigo-500/20 text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-white/5 opacity-50 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 0%, transparent 20%)', backgroundSize: '20px 20px' }} />
+                
+                <div className="relative z-10 w-full lg:w-auto">
+                    <h1 className="text-3xl font-extrabold tracking-tight">Pengaturan Profil Hotel</h1>
+                    <p className="text-indigo-200 mt-2 text-md">Kelola informasi dasar hotel yang akan digunakan di sistem dan cetak nota.</p>
+                </div>
             </header>
 
             <form onSubmit={handleSave} className="space-y-6 w-full">

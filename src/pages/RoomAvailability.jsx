@@ -185,29 +185,28 @@ export default function RoomAvailability() {
         <div className="h-screen bg-slate-50 flex flex-col lg:flex-row overflow-hidden animate-page-entrance">
             {/* Main Content Area */}
             <div className="flex-1 p-6 lg:p-8 flex flex-col overflow-hidden">
-                <header className="mb-6 shrink-0">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <div>
-                            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Ketersediaan Kamar</h1>
-                            <p className="text-slate-500 text-sm font-medium">Monitoring hunian hotel secara real-time</p>
+                <header className="mb-6 shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-indigo-800 to-purple-800 rounded-3xl p-8 shadow-lg shadow-indigo-500/20 text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-white/5 opacity-50 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 0%, transparent 20%)', backgroundSize: '20px 20px' }} />
+                    <div className="relative z-10 w-full lg:w-auto">
+                        <h1 className="text-3xl font-extrabold tracking-tight">Ketersediaan Kamar</h1>
+                        <p className="text-indigo-200 mt-2 text-md">Monitoring hunian hotel secara real-time</p>
+                    </div>
+                    <div className="relative z-10 flex flex-wrap items-center gap-4 shrink-0 bg-white/10 backdrop-blur border border-white/20 rounded-2xl px-5 py-3 shadow-md">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"></div>
+                            <span className="text-xs font-bold text-white">Terisi</span>
                         </div>
-                        <div className="flex items-center gap-6 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"></div>
-                                <span className="text-xs font-bold text-slate-600">Terisi</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]"></div>
-                                <span className="text-xs font-bold text-slate-600">Akan Datang</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-white border border-slate-300"></div>
-                                <span className="text-xs font-bold text-slate-600">Tersedia</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.4)]"></div>
-                                <span className="text-xs font-bold text-slate-600">Terpilih</span>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)]"></div>
+                            <span className="text-xs font-bold text-white">Akan Datang</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-white border border-white/30 shadow-[0_0_8px_rgba(255,255,255,0.4)]"></div>
+                            <span className="text-xs font-bold text-white">Tersedia</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-indigo-500 border border-white/50 shadow-[0_0_8px_rgba(79,70,229,0.8)]"></div>
+                            <span className="text-xs font-bold text-white">Terpilih</span>
                         </div>
                     </div>
                 </header>

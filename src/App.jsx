@@ -6,6 +6,7 @@ import ReservationConfirmation from './pages/ReservationConfirmation'
 import Login from './pages/Login'
 import DashboardLayout from './components/DashboardLayout'
 import Dashboard from './pages/Dashboard'
+import ReservationMonitoring from './pages/ReservationMonitoring'
 import ProtectedRoute from './components/ProtectedRoute'
 import UserManagement from './pages/UserManagement'
 import RoleBasedHome from './components/RoleBasedHome'
@@ -30,6 +31,7 @@ function App() {
                         {/* New Dashboard for Admins / Superadmins */}
                         <Route element={<ProtectedRoute allowedRoles={['Superadmin', 'Admin', 'Resepsionis']} />}>
                             <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/monitoring" element={<ReservationMonitoring />} />
                         </Route>
                         
                         {/* Accessible to all logged-in roles */}
