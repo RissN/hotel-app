@@ -62,8 +62,33 @@ export default function RegistrationForm() {
         }
     }, [searchParams]);
 
+    // Auto-cap numberOfPerson when numberOfRoom changes (max 2 per room)
+    useEffect(() => {
+        const maxPerson = (parseInt(formData.numberOfRoom) || 1) * 2;
+        setFormData(prev => {
+            const currentPerson = parseInt(prev.numberOfPerson) || 1;
+            if (currentPerson > maxPerson) {
+                return { ...prev, numberOfPerson: maxPerson };
+            }
+            return prev;
+        });
+    }, [formData.numberOfRoom]);
+
+    const maxPerson = (parseInt(formData.numberOfRoom) || 1) * 2;
+
     const handleChange = (e) => {
         const { name, value } = e.target;
+        if (name === 'numberOfPerson') {
+            const parsed = parseInt(value);
+            if (isNaN(parsed) || parsed < 1) {
+                setFormData(prev => ({ ...prev, [name]: 1 }));
+            } else if (parsed > maxPerson) {
+                setFormData(prev => ({ ...prev, [name]: maxPerson }));
+            } else {
+                setFormData(prev => ({ ...prev, [name]: parsed }));
+            }
+            return;
+        }
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -219,7 +244,11 @@ export default function RegistrationForm() {
                                     <div>
                                         <label className={labelClass}>No. of Person</label>
                                         <input type="number" name="numberOfPerson" value={formData.numberOfPerson} onChange={handleChange}
-                                            className={inputClass} min="1" />
+                                            className={inputClass} min="1" max={maxPerson} />
+                                        <p className="mt-1.5 text-[11px] text-blue-500 font-medium flex items-center gap-1">
+                                            <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                                            Maks. 2 tamu/kamar (max: {maxPerson} tamu)
+                                        </p>
                                     </div>
                                     <div>
                                         <label className={labelClass}>Room Type</label>
